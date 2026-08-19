@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+langchain
+langchain-openai
+python-dotenv
+sqlalchemy
+psycopg2
+psycopg2-binary
