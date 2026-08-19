@@ -32,10 +32,15 @@ class UserSignup(BaseModel):
 
         return self
 
+class UserContext(BaseModel):
+    id: UUID
+    full_name: str
+    email: EmailStr
+    role: str
+    department: str
 
 class UserLogin(BaseModel):
     email: EmailStr
-
     password: str
 
 

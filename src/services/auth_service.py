@@ -34,7 +34,8 @@ class AuthService:
             )
 
         token_data = {
-            "sub": str(user.id),
+            "id": str(user.id),
+            "full_name": user.full_name,
             "email": user.email,
             "role": user.role,
             "department": user.department,

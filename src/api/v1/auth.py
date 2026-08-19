@@ -10,9 +10,10 @@ from src.schemas.user_schemas import (
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
 
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(
-    prefix="/users",
+    prefix="/auth",
     tags=["Users"],
 )
 
@@ -39,20 +40,20 @@ def signup(
             detail=str(error),
         )
 
-
-@router.post(
-    "/login",
-)
+@router.post("/login")
 def login(
-    user_data: UserLogin,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
     service = AuthService(db)
 
+    user_data = UserLogin(
+        email=form_data.username,
+        password=form_data.password,
+    )
+
     try:
-        return service.login_user(
-            user_data
-        )
+        return service.login_user(user_data)
 
     except ValueError as error:
         raise HTTPException(

@@ -5,7 +5,7 @@ from src.auth.auth_handler import decode_access_token
 
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/users/login"
+    tokenUrl="/api/v1/auth/login"
 )
 
 
