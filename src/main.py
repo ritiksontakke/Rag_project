@@ -1,13 +1,21 @@
 from fastapi import FastAPI
 
+from src.api.v1.users import router as users_router
+
+from fastapi import FastAPI
+
+from src.models.user import User
+
+from src.db.init_db import create_tables
+
 app = FastAPI(
-    title="Multi Model RAG",
-    version="0.1.0",
+    title="Multi Model RAG API",
+    version="1.0.0",
 )
 
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "ok",
-        "message": "API is running",
-    }
+create_tables()
+
+app.include_router(
+    users_router,
+    prefix="/api/v1",
+)

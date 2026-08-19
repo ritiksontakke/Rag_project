@@ -5,5 +5,8 @@ langchain
 langchain-openai
 python-dotenv
 sqlalchemy
-psycopg2
 psycopg2-binary
+python-jose
+pwdlib
+pydantic[email]
+pwdlib[argon2]
