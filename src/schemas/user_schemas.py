@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, model_validator
 from uuid import UUID
-
+from dataclasses import dataclass
 
 class UserSignup(BaseModel):
     full_name: str = Field(
@@ -43,8 +43,15 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-
 class UserResponse(BaseModel):
+    id: UUID
+    full_name: str
+    email: EmailStr
+    role: str
+    department: str
+
+@dataclass
+class UserContext(BaseModel):
     id: UUID
     full_name: str
     email: EmailStr
