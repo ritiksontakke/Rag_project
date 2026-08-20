@@ -2,7 +2,11 @@ import os
 
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
-from qdrant_client.models import VectorParams, Distance
+from qdrant_client.models import (
+    VectorParams,
+    Distance,
+    PayloadSchemaType,
+)
 
 load_dotenv()
 
@@ -43,6 +47,22 @@ def create_qdrant_collection():
         )
 
     else:
+
         print(
-            f"Qdrant collection already exists: {COLLECTION_NAME}"
+            f"Qdrant collection already exists: "
+            f"{COLLECTION_NAME}"
         )
+
+    # -----------------------------------------
+    # Department payload index
+    # -----------------------------------------
+
+    qdrant_client.create_payload_index(
+        collection_name=COLLECTION_NAME,
+        field_name="department",
+        field_schema=PayloadSchemaType.KEYWORD,
+    )
+
+    print(
+        "Qdrant payload index ready: department"
+    )

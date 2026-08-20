@@ -1,4 +1,5 @@
 from langchain.agents import create_agent
+from langchain.tools import tool, ToolRuntime
 from langchain.agents.middleware import (
     ModelCallLimitMiddleware,
 )
@@ -10,51 +11,130 @@ from src.access_control.permission_manager import (
 )
 
 
-def get_document_upload_agent(
-    context: UserContext,
+@tool("uploadDocumentAgent")
+def uploadDocumentAgent(
+    query: str,
+    runtime: ToolRuntime[UserContext],
 ):
     """
-    Create the Document Upload Agent.
+    Document Upload Agent.
 
-    Only managers and administrators can
-    access the upload_document tool.
+    Acts as the document-upload sub-agent of the
+    main orchestrator agent.
+
+    Responsibilities:
+    - Handle document upload requests.
+    - Verify that the authenticated user's role
+      permits document uploads.
+    - Select the upload_document tool allowed for
+      the user's role.
+    - Delegate PDF ingestion to the upload_document tool.
+    - Return the result of the document ingestion process.
+
+    Access Control:
+    - Only users with the manager or admin role can
+      upload documents.
+    - Role-based access control is checked before
+      the upload tool is exposed to the agent.
+    - A second permission check ensures that the
+      upload_document tool is actually available.
+
+    Args:
+        query:
+            Natural-language document upload request.
+
+        runtime:
+            LangChain runtime containing the authenticated
+            user's UserContext.
+
+    Returns:
+        str:
+            Result returned by the document upload agent,
+            or a permission-denied message.
     """
+
+    context = runtime.context
 
     role = context.role
 
-    # Get tools allowed for this role
+    # -----------------------------------------
+    # Get tools allowed for the user's role
+    # -----------------------------------------
+
     tools = get_allowed_tools(role)
 
-    # Only upload_document tool
+    if not tools:
+        return (
+            f"Permission denied. "
+            f"No tools are available for role '{role}'."
+        )
+
+    # -----------------------------------------
+    # Select ONLY upload_document tool
+    # -----------------------------------------
+
     upload_tools = [
         current_tool
         for current_tool in tools
         if current_tool.name == "upload_document"
     ]
 
-    # Second layer RBAC
+    # -----------------------------------------
+    # Second-layer RBAC
+    # -----------------------------------------
+
     if not upload_tools:
-        raise PermissionError(
-            "Document upload is available only "
-            "to managers and administrators."
+        return (
+            "Permission denied. Document upload is "
+            "available only to managers and administrators."
         )
+
+    # -----------------------------------------
+    # Create upload sub-agent
+    # -----------------------------------------
 
     document_agent = create_agent(
         model=get_model(),
+
         tools=upload_tools,
+
         middleware=[
             ModelCallLimitMiddleware(
                 thread_limit=10,
                 run_limit=5,
             ),
         ],
+
         context_schema=UserContext,
+
         system_prompt=(
             "You are the Document Upload Agent. "
+
             "Your responsibility is to upload and "
             "ingest PDF documents. "
-            "Use the upload_document tool."
+
+            "Use the upload_document tool to perform "
+            "the actual ingestion. "
+
+            "Do not attempt to perform document "
+            "operations without using the provided tool."
         ),
     )
 
-    return document_agent
+    # -----------------------------------------
+    # Execute sub-agent
+    # -----------------------------------------
+
+    result = document_agent.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": query,
+                }
+            ]
+        },
+        context=context,
+    )
+
+    return result["messages"][-1].content

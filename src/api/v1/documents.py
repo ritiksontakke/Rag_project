@@ -12,7 +12,7 @@ from fastapi import (
 )
 
 from src.auth.oauth import get_current_user
-from src.agents.upload_agent import get_document_upload_agent
+from src.agents.Orchestrator_Agent import orchestratorAgent
 from src.schemas.user_schemas import UserContext
 
 
@@ -41,10 +41,13 @@ async def upload_document(
     if role not in {"admin", "manager"}:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Document upload is restricted "
-                "to administrators and managers."
-            ),
+            detail={
+                "code": "UPLOAD_NOT_ALLOWED",
+                "message": (
+                    "Document upload is restricted "
+                    "to administrators and managers."
+                ),
+            },
         )
 
     # =====================================
@@ -54,29 +57,72 @@ async def upload_document(
     if file.content_type != "application/pdf":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only PDF files are allowed.",
+            detail={
+                "code": "INVALID_FILE_TYPE",
+                "message": "Only PDF files are allowed.",
+            },
         )
 
     # =====================================
     # DEPARTMENT SECURITY
     # =====================================
 
-    user_department = current_user.get("department")
+    user_department = current_user.get(
+        "department"
+    )
 
     if not user_department:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User department is not available.",
+            detail={
+                "code": "DEPARTMENT_MISSING",
+                "message": (
+                    "User department is not available."
+                ),
+            },
         )
 
-    if department.lower() != user_department.lower():
+    if (
+        department.strip().lower()
+        != user_department.strip().lower()
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "You can upload documents only for "
-                "your assigned department."
-            ),
+            detail={
+                "code": "DEPARTMENT_ACCESS_DENIED",
+                "message": (
+                    "You can upload documents only "
+                    "for your assigned department."
+                ),
+            },
         )
+
+    # =====================================
+    # USER CONTEXT
+    # =====================================
+
+    try:
+
+        context = UserContext(
+            id=current_user["id"],
+            full_name=current_user["full_name"],
+            email=current_user["email"],
+            role=current_user["role"],
+            department=current_user["department"],
+        )
+
+    except KeyError as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "code": "INVALID_USER_CONTEXT",
+                "message": (
+                    "Authenticated user information "
+                    "is incomplete."
+                ),
+            },
+        ) from e
 
     # =====================================
     # TEMPORARY FILE
@@ -96,39 +142,25 @@ async def upload_document(
     try:
 
         # =====================================
-        # USER CONTEXT
+        # MAIN ORCHESTRATOR
         # =====================================
 
-        context = UserContext(
-            id=current_user["id"],
-            full_name=current_user["full_name"],
-            email=current_user["email"],
-            role=current_user["role"],
-            department=current_user["department"],
-        )
+        agent = orchestratorAgent()
 
         # =====================================
-        # DOCUMENT UPLOAD AGENT
+        # SEND REQUEST TO MAIN AGENT
         # =====================================
 
-        document_agent = get_document_upload_agent(
-            context=context,
-        )
-
-        # =====================================
-        # RUN AGENT
-        # =====================================
-
-        result = document_agent.invoke(
+        result = agent.invoke(
             {
                 "messages": [
                     {
                         "role": "user",
                         "content": (
-                            f"Upload this PDF file: "
-                            f"{temp_file_path}. "
-                            f"Department: "
-                            f"{user_department}"
+                            "Upload this PDF document.\n\n"
+                            f"File path: {temp_file_path}\n"
+                            f"Department: {user_department}\n"
+                            f"File name: {file.filename}"
                         ),
                     }
                 ]
@@ -136,17 +168,56 @@ async def upload_document(
             context=context,
         )
 
+        # =====================================
+        # FINAL AGENT RESPONSE
+        # =====================================
+
+        answer = result[
+            "messages"
+        ][-1].content
+
         return {
+            "success": True,
             "message": (
                 "Document uploaded and "
-                "ingestion started successfully."
+                "ingestion completed successfully."
             ),
-            "file_name": file.filename,
-            "department": user_department,
-            "result": result["messages"][-1].content,
+            "data": {
+                "file_name": file.filename,
+                "department": user_department,
+                "result": answer,
+            },
         }
 
+    except PermissionError as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "UPLOAD_PERMISSION_DENIED",
+                "message": str(e),
+            },
+        ) from e
+
+    except Exception as e:
+
+        # Log e internally in production.
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "code": "DOCUMENT_UPLOAD_FAILED",
+                "message": (
+                    "Unable to process the document "
+                    "upload."
+                ),
+            },
+        ) from e
+
     finally:
+
+        # =====================================
+        # CLEAN TEMP FILE
+        # =====================================
 
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)

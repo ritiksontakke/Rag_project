@@ -50,10 +50,17 @@ class UserResponse(BaseModel):
     role: str
     department: str
 
-@dataclass
+class KnowledgeRequest(BaseModel):
+    query: str
+
 class UserContext(BaseModel):
+
     id: UUID
+
     full_name: str
+
     email: EmailStr
+
     role: str
+
     department: str

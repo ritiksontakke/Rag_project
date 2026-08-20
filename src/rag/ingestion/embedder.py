@@ -1,6 +1,4 @@
-from langchain_huggingface import (
-    HuggingFaceEmbeddings,
-)
+from langchain_huggingface import HuggingFaceEmbeddings
 
 
 embeddings = HuggingFaceEmbeddings(
@@ -8,17 +6,14 @@ embeddings = HuggingFaceEmbeddings(
 )
 
 
-def create_embeddings(
-    chunks,
-):
+def create_embeddings(texts: list[str]) -> list[list[float]]:
+    return embeddings.embed_documents(texts)
 
+
+def create_document_embeddings(documents):
     texts = [
-        chunk.page_content
-        for chunk in chunks
+        document.page_content
+        for document in documents
     ]
 
-    vectors = embeddings.embed_documents(
-        texts
-    )
-
-    return vectors
+    return embeddings.embed_documents(texts)

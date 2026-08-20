@@ -29,9 +29,23 @@ def get_model():
 # # Get by version number, usually not recommended as it requires code changes to deploy new prompt versions
 # langfuse.get_prompt("multi_model_rag", version=1)
 
-def getSystemPrompt():
-    prompt = langfuse.get_prompt(
-        "multi_model_rag",
-        label="production"
-    )
-    return prompt
+
+
+def getSystemPrompt(prompt_name: str = "multi_model_rag"):
+    try:
+        prompt = langfuse.get_prompt(
+            prompt_name,
+            label="production"  # or "latest"
+        )
+
+        # Depending on Langfuse version
+        return prompt.prompt
+
+    except Exception as e:
+        print(f"Failed to load prompt: {e}")
+
+        return """
+        You are an Orchestrator Agent.
+        Route tasks to the correct sub-agent.
+        Never hallucinate.
+        """
