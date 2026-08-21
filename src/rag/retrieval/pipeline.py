@@ -3,13 +3,13 @@ from src.rag.retrieval.qdrant_search import (
 )
 
 
-RELEVANCE_THRESHOLD = 0.0
+RELEVANCE_THRESHOLD = 0.65
 
 
 def retrieval_pipeline(
     query: str,
     department: str,
-    limit: int = 5,
+    limit: int = 3,
 ):
     results = search_documents(
         query=query,

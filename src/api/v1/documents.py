@@ -14,6 +14,7 @@ from fastapi import (
 from src.auth.oauth import get_current_user
 from src.agents.Orchestrator_Agent import orchestratorAgent
 from src.schemas.user_schemas import UserContext
+from src.utils.model import langfuse_handler
 
 
 router = APIRouter(
@@ -166,6 +167,9 @@ async def upload_document(
                 ]
             },
             context=context,
+            config={
+                "callbacks": [langfuse_handler],
+            }
         )
 
         # =====================================

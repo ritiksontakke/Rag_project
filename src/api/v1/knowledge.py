@@ -11,7 +11,7 @@ from src.schemas.user_schemas import (
 )
 
 from src.auth.oauth import get_current_user
-
+from src.utils.model import langfuse_handler
 from src.agents.Orchestrator_Agent import (
     orchestratorAgent,
 )
@@ -63,6 +63,9 @@ async def ask_knowledge(
                 ]
             },
             context=context,
+            config={
+                "callbacks": [langfuse_handler],
+            }
         )
 
         # -----------------------------------------

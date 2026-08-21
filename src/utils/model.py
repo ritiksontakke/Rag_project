@@ -2,10 +2,12 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 import os
 from langfuse import Langfuse
+from langfuse.langchain import CallbackHandler
 
 
 load_dotenv()
 langfuse = Langfuse()
+langfuse_handler = CallbackHandler()
 
 def get_openai_model():
     return ChatOpenAI(
@@ -28,6 +30,7 @@ def get_model():
 
 # # Get by version number, usually not recommended as it requires code changes to deploy new prompt versions
 # langfuse.get_prompt("multi_model_rag", version=1)
+
 
 
 

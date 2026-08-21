@@ -2,7 +2,7 @@ from langchain.agents import create_agent
 from langchain.tools import tool , ToolRuntime
 from src.schemas.user_schemas import UserContext
 from src.utils.model import get_model , getSystemPrompt
-from langchain.agents.middleware import ModelCallLimitMiddleware
+# from langchain.agents.middleware import ModelCallLimitMiddleware
 from src.access_control.permission_manager import get_allowed_tools
 
 @tool("documentManagmentAgent")
@@ -55,12 +55,12 @@ def documentmanagmentAgent(query : str, runtime: ToolRuntime[UserContext]):
     documentAgent = create_agent(
         model=get_model(),
         tools=tools,
-        middleware= [ModelCallLimitMiddleware(
-            thread_limit=10,
-            run_limit=5,
-        )
-    ],
-        system_prompt=getSystemPrompt("multi_model_rag")
+        system_prompt=getSystemPrompt("multi_model_rag"),
+        # middleware= [ModelCallLimitMiddleware(
+        #     thread_limit=10,
+        #     run_limit=5,
+        # )
+    # ],
     )
 
     result = documentAgent.invoke({"messages": [{"role" :"user", "content":query}]} , context=runtime.context)

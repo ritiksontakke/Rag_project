@@ -1,6 +1,5 @@
 from langchain.agents import create_agent
 from langchain.tools import tool, ToolRuntime
-from langchain.agents.middleware import ModelCallLimitMiddleware
 
 from src.schemas.user_schemas import UserContext
 from src.utils.model import get_model
@@ -16,16 +15,10 @@ def knowledgeAgent(
     Knowledge Base Agent.
 
     Uses the company knowledge base to answer user questions.
-
-    The agent MUST call search_documents before generating
-    the final answer.
+    The agent must call search_documents before answering.
     """
 
     context = runtime.context
-
-    # -----------------------------------------
-    # ONLY knowledge-base search tool
-    # -----------------------------------------
 
     knowledge_tools = [
         search_documents,
@@ -40,76 +33,71 @@ def knowledgeAgent(
         [tool.name for tool in knowledge_tools],
     )
 
-    # -----------------------------------------
-    # System prompt
-    # -----------------------------------------
-
     system_prompt = """
 You are the Company Knowledge Base Agent.
 
-You answer questions ONLY from the company's
-internal knowledge base.
+You answer questions ONLY using information returned
+by the search_documents tool.
 
 MANDATORY WORKFLOW:
 
-STEP 1:
-For EVERY user question, you MUST call the
-search_documents tool.
+1. For EVERY user question, call search_documents first.
+2. Read the complete tool result.
+3. Identify the retrieved content directly relevant
+   to the user's question.
+4. Answer ONLY from the relevant retrieved content.
+5. If the retrieved content does not contain enough
+   information, respond exactly:
 
-DO NOT answer before calling the tool.
+"I could not find relevant information in your department's knowledge base."
 
-STEP 2:
-Read the complete result returned by
-search_documents.
+KNOWLEDGE BASE RULES:
 
-STEP 3:
-If relevant information exists in the returned
-documents, answer using ONLY that information.
-
-STEP 4:
-If the returned documents do not contain enough
-information to answer the question, say:
-
-"I could not find relevant information in your
-department's knowledge base."
-
-IMPORTANT:
-
-- Never answer from your general knowledge.
+- The retrieved company documents are the only source of truth.
+- Never use your general knowledge.
 - Never guess.
 - Never invent information.
-- Never ask unnecessary clarification questions.
-- Never use information that was not returned by
-  search_documents.
-- The retrieved company documents are the only
-  source of truth.
+- Do not combine unrelated retrieved chunks.
+- Ignore chunks that discuss a different topic.
+- Prefer the highest-scoring retrieved result that directly answers the question.
+- If multiple relevant chunks provide complementary information,
+  they may be combined.
+- If relevant chunks conflict, clearly state that the documents
+  contain conflicting information.
+- Keep the final answer concise.
+
+STRICT SOURCE RULES:
+
+- Do not add explanations that are not explicitly present in the retrieved content.
+- Do not expand abbreviations unless the expansion appears in the retrieved content.
+- Do not add definitions in parentheses.
+- Do not add examples from general knowledge.
+- Do not add technical details that are not present in the retrieved content.
+- Do not infer additional meaning from the retrieved content.
+- If the retrieved document contains a direct answer, stay as close as possible to that answer.
+- You may remove unrelated information, but you must not add new information.
+
+SOURCE LANGUAGE RULES:
+
+- Preserve the language of the relevant retrieved content.
+- If the relevant content is Marathi, answer in Marathi.
+- If the relevant content is Hindi, answer in Hindi.
+- If the relevant content is English, answer in English.
+- If the relevant content is mixed-language, preserve the natural mixed-language style.
+- Do not translate unless explicitly asked.
 
 Do not mention tools, Qdrant, embeddings, retrieval,
 agents, or internal implementation details.
 
-Return only the final answer.
+Return ONLY the final answer.
 """
-
-    # -----------------------------------------
-    # Create agent
-    # -----------------------------------------
 
     knowledgebase_agent = create_agent(
         model=get_model(),
         tools=knowledge_tools,
-        middleware=[
-            ModelCallLimitMiddleware(
-                thread_limit=10,
-                run_limit=5,
-            ),
-        ],
         context_schema=UserContext,
         system_prompt=system_prompt,
     )
-
-    # -----------------------------------------
-    # Invoke
-    # -----------------------------------------
 
     result = knowledgebase_agent.invoke(
         {
@@ -122,10 +110,6 @@ Return only the final answer.
         },
         context=context,
     )
-
-    # -----------------------------------------
-    # DEBUG
-    # -----------------------------------------
 
     print(
         "\n========== AGENT MESSAGES =========="

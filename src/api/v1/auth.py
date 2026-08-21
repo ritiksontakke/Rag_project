@@ -9,7 +9,6 @@ from src.schemas.user_schemas import (
 )
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
-
 from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(

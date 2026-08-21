@@ -1,20 +1,33 @@
-from langchain_text_splitters import (
-    RecursiveCharacterTextSplitter,
-)
+import re
+
+from langchain_core.documents import Document
 
 
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=200,
-)
+def chunk_documents(documents):
 
+    chunks = []
 
-def chunk_documents(
-    documents,
-):
+    for document in documents:
 
-    chunks = text_splitter.split_documents(
-        documents
-    )
+        text = document.page_content
+
+        parts = re.split(
+            r"(?m)(?=^\s*\d+\)\s*)",
+            text,
+        )
+
+        for part in parts:
+
+            part = part.strip()
+
+            if not part:
+                continue
+
+            chunks.append(
+                Document(
+                    page_content=part,
+                    metadata=document.metadata.copy(),
+                )
+            )
 
     return chunks
