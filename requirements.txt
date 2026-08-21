@@ -19,10 +19,10 @@ pwdlib[argon2]
 qdrant-client
 
 
-# langchain-text-splitters
-# langchain-huggingface
-# sentence-transformers
-# langchain-community
+langchain-text-splitters
+langchain-huggingface
+sentence-transformers
+langchain-community
 
 python-multipart
 langfuse
