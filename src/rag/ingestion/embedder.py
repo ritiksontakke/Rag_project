@@ -1,19 +1,18 @@
-from langchain_huggingface import HuggingFaceEmbeddings
+import os
+from huggingface_hub import InferenceClient
 
-
-embeddings = HuggingFaceEmbeddings(
-    model_name="BAAI/bge-small-en-v1.5",
+client = InferenceClient(
+    provider="hf-inference",
+    api_key=os.environ["HF_TOKEN"],
 )
+
+MODEL = "BAAI/bge-small-en-v1.5"
 
 
 def create_embeddings(texts: list[str]) -> list[list[float]]:
-    return embeddings.embed_documents(texts)
+    result = client.feature_extraction(
+        texts,
+        model=MODEL,
+    )
 
-
-def create_document_embeddings(documents):
-    texts = [
-        document.page_content
-        for document in documents
-    ]
-
-    return embeddings.embed_documents(texts)
+    return result.tolist()
