@@ -10,10 +10,10 @@ sqlalchemy
 psycopg2-binary
 email-validator
 
-# python-jose
-# pwdlib
-# pydantic[email]
-# pwdlib[argon2]
+python-jose
+pwdlib
+pydantic[email]
+pwdlib[argon2]
 
 
 # qdrant-client
