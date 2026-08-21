@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Multi Model RAG — Knowledge Assistant</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ================= AUTH SCREEN (full width split) ================= -->
+<div id="auth-screen" class="auth-split">
+
+  <!-- LEFT: brand / marketing panel -->
+  <section class="auth-hero">
+    <div class="hero-inner">
+      <div class="brand">
+        <img class="agent-img" src="img/agent.png" alt="AI agent" />
+        <div>
+          <h1>Multi Model RAG</h1>
+          <p>Department-aware knowledge assistant</p>
+        </div>
+      </div>
+
+      <h2 class="hero-title">Ask your company documents<br />like you ask a colleague.</h2>
+      <p class="hero-sub">
+        Secure, role-based retrieval augmented generation over your internal PDFs.
+        Answers stay scoped to your department and permissions.
+      </p>
+
+      <p class="hero-foot">FastAPI · LangChain · Qdrant · PostgreSQL</p>
+    </div>
+  </section>
+
+  <!-- RIGHT: forms -->
+  <section class="auth-pane">
+    <div class="auth-box">
+      <h2 id="auth-heading">Welcome back</h2>
+      <p class="auth-lead" id="auth-lead">Sign in to continue to your knowledge base.</p>
+
+      <div class="tabs">
+        <button id="tab-login" class="tab active" onclick="showTab('login')">Login</button>
+        <button id="tab-signup" class="tab" onclick="showTab('signup')">Create account</button>
+      </div>
+
+      <!-- LOGIN -->
+      <form id="login-form" class="form" onsubmit="doLogin(event)">
+        <label>Email
+          <input type="email" id="login-email" required placeholder="you@company.com" />
+        </label>
+        <label>Password
+          <input type="password" id="login-password" required placeholder="••••••••" />
+        </label>
+        <button class="primary" type="submit">Login</button>
+      </form>
+
+      <!-- SIGNUP -->
+      <form id="signup-form" class="form hidden" onsubmit="doSignup(event)">
+        <label>Full name
+          <input type="text" id="su-name" required minlength="2" placeholder="Ritik Sontakke" />
+        </label>
+        <label>Email
+          <input type="email" id="su-email" required placeholder="you@company.com" />
+        </label>
+        <label>Department
+          <input type="text" id="su-dept" required minlength="2" placeholder="finance / hr / engineering" />
+        </label>
+        <div class="row">
+          <label>Password
+            <input type="password" id="su-password" required minlength="8" />
+          </label>
+          <label>Confirm password
+            <input type="password" id="su-confirm" required minlength="8" />
+          </label>
+        </div>
+        <button class="primary" type="submit">Create account</button>
+      </form>
+
+      <p id="auth-msg" class="msg"></p>
+      <p class="api-hint">API: <span id="api-url"></span></p>
+    </div>
+  </section>
+</div>
+
+<!-- ================= APP SCREEN ================= -->
+<div id="app-screen" class="app hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="side-brand">
+      <img class="agent-img sm" src="img/agent.png" alt="AI agent" />
+      <span>Knowledge</span>
+    </div>
+
+
+
+
+
+    <div class="profile">
+      <div class="avatar" id="avatar">--</div>
+      <div class="who">
+        <strong id="u-name">—</strong>
+        <span id="u-email">—</span>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <span class="k">Role</span>
+      <span class="v badge" id="u-role">—</span>
+    </div>
+    <div class="info-block">
+      <span class="k">Department</span>
+      <span class="v badge alt" id="u-dept">—</span>
+    </div>
+    <div class="info-block">
+      <span class="k">User ID</span>
+      <span class="v mono" id="u-id">—</span>
+    </div>
+
+    <div class="side-section">
+      <h3>Permissions</h3>
+      <ul id="perm-list" class="perms"></ul>
+    </div>
+
+    <div class="side-section" id="upload-section">
+      <h3>Upload document</h3>
+      <form onsubmit="doUpload(event)" class="upload-form">
+        <div class="locked-field">
+          <span class="k">Department</span>
+          <span class="v badge alt" id="up-dept-label">—</span>
+          <input type="hidden" id="up-dept" />
+        </div>
+        <input type="file" id="up-file" accept="application/pdf" />
+        <button class="ghost" type="submit">Upload PDF</button>
+      </form>
+      <p id="upload-msg" class="msg small"></p>
+    </div>
+
+    <div class="side-section chats-section">
+      <h3>Chats</h3>
+      <ul id="chat-list" class="chat-list"></ul>
+      <button class="new-chat sm" onclick="newChat()">+ New chat</button>
+    </div>
+
+
+    <button class="logout" onclick="logout()">Log out</button>
+  </aside>
+
+  <!-- CHAT -->
+  <main class="chat">
+    <header class="chat-head">
+      <div>
+        <h2 id="chat-title">Ask your knowledge base</h2>
+        <p>Answers are scoped to your department and role.</p>
+      </div>
+      <div class="head-actions">
+        <button class="ghost" onclick="renameChat()">Rename</button>
+        <button class="ghost" onclick="clearChat()">Clear chat</button>
+      </div>
+    </header>
+
+    <div id="messages" class="messages"></div>
+
+    <form class="composer" onsubmit="doAsk(event)">
+      <textarea id="query" rows="1" placeholder="Ask a question about your documents..."></textarea>
+      <button class="primary" type="submit" id="send-btn">Send</button>
+    </form>
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
