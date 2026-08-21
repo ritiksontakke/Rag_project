@@ -1,12 +1,3 @@
-"""
-Tiny static server for the Multi Model RAG frontend.
-
-Run:
-    python frontend/serve.py
-Then open:
-    http://127.0.0.1:5500
-"""
-
 import http.server
 import os
 import socketserver
@@ -25,10 +16,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
-        print(f"Frontend running at http://127.0.0.1:{PORT}")
-        print("Backend expected at http://127.0.0.1:8000 (FastAPI)")
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            print("\nStopped.")
+    with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
+        print(f"Frontend running on port {PORT}")
+        httpd.serve_forever()
