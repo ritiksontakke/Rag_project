@@ -29,7 +29,7 @@ app.add_middleware(
 #     create_qdrant_collection()
 
 
-create_tables()
+# create_tables()
 
 app.include_router(
     users_router,
