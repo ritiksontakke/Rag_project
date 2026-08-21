@@ -1,7 +1,7 @@
 # from fastapi import FastAPI
 
-# from src.api.v1.auth import router as users_router
-# from src.api.v1.documents import router
+from src.api.v1.auth import router as users_router
+from src.api.v1.documents import router
 from fastapi import FastAPI
 # from src.core.config import create_qdrant_collection
 # from src.models.user import User
@@ -31,15 +31,15 @@ app.add_middleware(
 
 # create_tables()
 
-# app.include_router(
-#     users_router,
-#     prefix="/api/v1",
-# )
+app.include_router(
+    users_router,
+    prefix="/api/v1",
+)
 
-# app.include_router(
-#     router,
-#     prefix="/api/v1",
-# )
+app.include_router(
+    router,
+    prefix="/api/v1",
+)
 
 # app.include_router(
 #     knowledge_router,
