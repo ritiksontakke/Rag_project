@@ -4,28 +4,28 @@ pydantic
 langchain
 
 
-langchain-openai
-python-dotenv
-sqlalchemy
-psycopg2-binary
+# langchain-openai
+# python-dotenv
+# sqlalchemy
+# psycopg2-binary
 
 
-python-jose
-pwdlib
-pydantic[email]
-pwdlib[argon2]
+# python-jose
+# pwdlib
+# pydantic[email]
+# pwdlib[argon2]
 
 
-qdrant-client
+# qdrant-client
 
 
-langchain-text-splitters
-langchain-huggingface
-sentence-transformers
-langchain-community
+# langchain-text-splitters
+# langchain-huggingface
+# sentence-transformers
+# langchain-community
 
-python-multipart
-langfuse
+# python-multipart
+# langfuse
 
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
+# --extra-index-url https://download.pytorch.org/whl/cpu
+# torch

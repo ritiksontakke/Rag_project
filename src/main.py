@@ -1,12 +1,12 @@
-from fastapi import FastAPI
+# from fastapi import FastAPI
 
-from src.api.v1.auth import router as users_router
-from src.api.v1.documents import router
+# from src.api.v1.auth import router as users_router
+# from src.api.v1.documents import router
 from fastapi import FastAPI
-from src.core.config import create_qdrant_collection
-from src.models.user import User
-from src.api.v1.knowledge import router as knowledge_router
-from src.db.init_db import create_tables
+# from src.core.config import create_qdrant_collection
+# from src.models.user import User
+# from src.api.v1.knowledge import router as knowledge_router
+# from src.db.init_db import create_tables
 
 app = FastAPI(
     title="Multi Model RAG API",
