@@ -24,7 +24,7 @@ pwdlib[argon2]
 # sentence-transformers
 # langchain-community
 
-# python-multipart
+python-multipart
 # langfuse
 
 # --extra-index-url https://download.pytorch.org/whl/cpu
