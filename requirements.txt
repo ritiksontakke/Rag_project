@@ -16,7 +16,7 @@ pydantic[email]
 pwdlib[argon2]
 
 
-# qdrant-client
+qdrant-client
 
 
 # langchain-text-splitters
@@ -25,7 +25,7 @@ pwdlib[argon2]
 # langchain-community
 
 python-multipart
-# langfuse
+langfuse
 
-# --extra-index-url https://download.pytorch.org/whl/cpu
-# torch
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
