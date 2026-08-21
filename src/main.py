@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from src.api.v1.auth import router as users_router
 from src.api.v1.documents import router
 from fastapi import FastAPI
-# from src.core.config import create_qdrant_collection
+from src.core.config import create_qdrant_collection
 from src.models.user import User
 from src.api.v1.knowledge import router as knowledge_router
 from src.db.init_db import create_tables
@@ -31,17 +31,17 @@ app.add_middleware(
 
 # create_tables()
 
-app.include_router(
-    users_router,
-    prefix="/api/v1",
-)
+# app.include_router(
+#     users_router,
+#     prefix="/api/v1",
+# )
 
-app.include_router(
-    router,
-    prefix="/api/v1",
-)
+# app.include_router(
+#     router,
+#     prefix="/api/v1",
+# )
 
-app.include_router(
-    knowledge_router,
-    prefix="/api/v1",
-)
+# app.include_router(
+#     knowledge_router,
+#     prefix="/api/v1",
+# )
