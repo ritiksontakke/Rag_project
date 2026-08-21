@@ -13,9 +13,38 @@ def get_document(
     runtime: ToolRuntime[UserContext],
 ):
     """
-    Get information about a specific document
-    from the company knowledge base.
+    Get an existing document from the company knowledge base.
+
+    IMPORTANT:
+    This tool is ONLY for retrieving an existing document.
+
+    Use this tool when the user asks:
+    - get a document
+    - show a document
+    - retrieve a document
+    - open a document
+    - get document information
+    - get a document by filename or source path
+
+    Do NOT use this tool for uploading documents.
+
+    Args:
+        source:
+            The exact source/path of the existing document.
+
+            Example:
+            /tmp/tmprphko54l.pdf
+
+        runtime:
+            Authenticated user context containing role and department.
+
+    Returns:
+        Information and chunks belonging to the requested document.
     """
+    print("\n🔥🔥 GET DOCUMENT TOOL CALLED 🔥🔥")
+    print("SOURCE:", source)
+    print("ROLE:", runtime.context.role)
+    print("DEPARTMENT:", runtime.context.department)
 
     try:
 
@@ -39,10 +68,12 @@ def get_document(
                     },
                 ]
             },
-            limit=100,
+            limit=1000,
             with_payload=True,
             with_vectors=False,
         )
+        print("🔥 QDRANT RESULT TYPE:", type(results))
+        print("🔥 POINT COUNT:", len(results[0]))
 
         points = results[0]
 
@@ -85,6 +116,8 @@ def get_document(
                     ),
                 }
             )
+            print("✅ GET DOCUMENT SUCCESS")
+            print("TOTAL CHUNKS:", len(chunks))
 
         return {
             "status": "success",
@@ -94,6 +127,10 @@ def get_document(
         }
 
     except Exception as e:
+        print("\n❌ GET DOCUMENT ERROR")
+        print("ERROR TYPE:", type(e).__name__)
+        print("ERROR:", repr(e))
+
 
         return {
             "status": "error",

@@ -48,20 +48,150 @@ def documentmanagmentAgent(query : str, runtime: ToolRuntime[UserContext]):
     """
 
     role = runtime.context.role
+    print("\n🔥🔥 DOCUMENT MANAGEMENT AGENT CALLED 🔥🔥")
+    print("QUERY:", query)
+    print("ROLE:", runtime.context.role)
+    print("DEPARTMENT:", runtime.context.department)
+
+    print("🔥 BEFORE get_allowed_tools")
+
     tools = get_allowed_tools(role)
+
+    print("🔥 AFTER get_allowed_tools")
+    print("🔥 TOOLS:", tools)
+    print(
+        "🔥 TOOL NAMES:",
+        [t.name for t in tools],
+    )
+    print("🔥 AFTER get_allowed_tools")
+    print("🔥 TOOLS:", tools)
+    print("🔥 TOOL TYPE:", type(tools))
     if not tools:
         return f"Permission denied. No tools are available for role '{role}'."
 
+    model = get_model()
+
+    print("\n🔥 MODEL TYPE:", type(model))
+    print("🔥 MODEL:", model)
     documentAgent = create_agent(
-        model=get_model(),
+        model=model,
         tools=tools,
-        system_prompt=getSystemPrompt("multi_model_rag"),
-        # middleware= [ModelCallLimitMiddleware(
-        #     thread_limit=10,
-        #     run_limit=5,
-        # )
-    # ],
+        context_schema=UserContext,
+        system_prompt = f"""
+You are the Company Document Management Agent.
+
+AUTHENTICATED USER CONTEXT:
+
+Role: {runtime.context.role}
+Department: {runtime.context.department}
+
+The authenticated user's role and department are already verified
+by the application. Do not ask the user to confirm their role.
+
+TOOL ROUTING RULES:
+
+1. GET DOCUMENT
+
+If the user asks:
+- get a document
+- show a document
+- retrieve a document
+- open a document
+- give me information about a document
+- get document by source/path
+
+MUST call `get_document`.
+
+Example:
+
+User:
+"Get the document /tmp/example.pdf"
+
+Call:
+
+get_document(
+    source="/tmp/example.pdf"
+)
+
+Pass ONLY the exact document source/path.
+
+2. LIST DOCUMENTS
+
+If the user asks:
+- list documents
+- show documents
+- list all documents
+- show all available documents
+- list documents in my department
+- list Python documents
+
+MUST call `list_documents`.
+
+For example:
+
+User:
+"List all available documents in my department"
+
+Call:
+
+list_documents(
+    query="List all available documents in my department"
+)
+
+IMPORTANT:
+The authenticated user's role is "{runtime.context.role}".
+
+If role is "admin" or "manager", list_documents is authorized.
+
+Do NOT say that the user is an employee when the authenticated
+role is admin or manager.
+
+Do NOT ask the user to confirm their role.
+
+3. SEARCH DOCUMENTS
+
+If the user asks a question about information inside documents,
+call `search_documents`.
+
+4. UPLOAD DOCUMENT
+
+ONLY call `upload_document` when the user explicitly asks to
+upload/add/ingest a new document.
+
+5. UPDATE DOCUMENT
+
+ONLY call `update_document` when the user explicitly asks to
+update/replace an existing document.
+
+6. DELETE DOCUMENT
+
+ONLY call `delete_document` when the user explicitly asks to
+delete/remove an existing document.
+
+GENERAL RULES:
+
+- Always use the appropriate tool.
+- Do not answer document operations from general knowledge.
+- Do not invent document information.
+- Do not ask unnecessary clarification questions.
+- Respect the authenticated user's department.
+- Never expose another department's documents.
+- After a tool call, return the tool's result accurately.
+- Do not replace an explicit tool result with a generic fallback.
+
+Return only the final answer.
+"""
     )
+    print("\n🔥 DOCUMENT AGENT TYPE:", type(documentAgent))
+    print("🔥 DOCUMENT AGENT:", documentAgent)
+
+    agent_query = query
+
+    if runtime.context.file_path:
+        agent_query += (
+            f"\n\nReplacement file path: "
+            f"{runtime.context.file_path}"
+        )
 
     result = documentAgent.invoke({"messages": [{"role" :"user", "content":query}]} , context=runtime.context)
     return result["messages"][-1].content

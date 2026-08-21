@@ -68,6 +68,33 @@ async def ask_knowledge(
             }
         )
 
+        print("\n========== ORCHESTRATOR MESSAGES ==========")
+
+        for message in result["messages"]:
+
+            print(
+                "\nTYPE:",
+                type(message).__name__,
+            )
+
+            print(
+                "CONTENT:",
+                getattr(
+                    message,
+                    "content",
+                    None,
+                ),
+            )
+
+            print(
+                "TOOL CALLS:",
+                getattr(
+                    message,
+                    "tool_calls",
+                    None,
+                ),
+            )
+
         # -----------------------------------------
         # Final response
         # -----------------------------------------

@@ -107,18 +107,26 @@ def uploadDocumentAgent(
 
         context_schema=UserContext,
 
-        system_prompt=(
-            "You are the Document Upload Agent. "
+        system_prompt = """
+You are the Document Upload Agent.
 
-            "Your responsibility is to upload and "
-            "ingest PDF documents. "
+Your ONLY responsibility is uploading PDF documents.
 
-            "Use the upload_document tool to perform "
-            "the actual ingestion. "
+For every upload request:
 
-            "Do not attempt to perform document "
-            "operations without using the provided tool."
-        ),
+1. You MUST call upload_document.
+2. Do NOT answer before calling the tool.
+3. Do NOT use general knowledge.
+4. Do NOT call any other tool.
+5. After upload_document returns:
+   - If status is "success", return the tool result.
+   - If status is "error", return the exact error message from the tool.
+6. NEVER generate a generic fallback such as:
+   "I'm sorry, but I was unable to retrieve..."
+7. NEVER claim that upload failed if upload_document returned status="success".
+
+The upload_document tool is the source of truth.
+"""
     )
 
     # -----------------------------------------
@@ -134,7 +142,14 @@ def uploadDocumentAgent(
                 }
             ]
         },
-        context=context,
+        context=runtime.context,
     )
+
+    print("\n========== UPLOAD AGENT MESSAGES ==========")
+
+    for message in result["messages"]:
+        print("\nTYPE:", type(message).__name__)
+        print("CONTENT:", getattr(message, "content", None))
+        print("TOOL CALLS:", getattr(message, "tool_calls", None))
 
     return result["messages"][-1].content

@@ -5,6 +5,11 @@ from src.core.config import (
     qdrant_client,
     COLLECTION_NAME,
 )
+from qdrant_client.models import (
+    Filter,
+    FieldCondition,
+    MatchValue,
+)
 from src.rag.ingestion.pipeline import ingestion_pipeline
 
 
@@ -18,6 +23,11 @@ def update_document(
     """
     Replace an existing document with a new PDF.
     """
+    print("\n🔥🔥 UPDATE DOCUMENT TOOL CALLED 🔥🔥")
+    print("SOURCE:", source)
+    print("FILE PATH:", file_path)
+    print("ROLE:", runtime.context.role)
+    print("DEPARTMENT:", runtime.context.department)
 
     # -----------------------------
     # ROLE CHECK
@@ -59,24 +69,22 @@ def update_document(
 
         qdrant_client.delete(
             collection_name=COLLECTION_NAME,
-            points_selector={
-                "filter": {
-                    "must": [
-                        {
-                            "key": "source",
-                            "match": {
-                                "value": source,
-                            },
-                        },
-                        {
-                            "key": "department",
-                            "match": {
-                                "value": department,
-                            },
-                        },
-                    ]
-                }
-            },
+            points_selector=Filter(
+                must=[
+                    FieldCondition(
+                        key="source",
+                        match=MatchValue(
+                            value=source
+                        ),
+                    ),
+                    FieldCondition(
+                        key="department",
+                        match=MatchValue(
+                            value=department
+                        ),
+                    ),
+                ]
+            ),
         )
 
         # -----------------------------

@@ -1,5 +1,11 @@
 from langchain.tools import tool, ToolRuntime
 
+from qdrant_client.models import (
+    Filter,
+    FieldCondition,
+    MatchValue,
+)
+
 from src.schemas.user_schemas import UserContext
 from src.core.config import (
     qdrant_client,
@@ -15,25 +21,14 @@ def delete_document(
     """
     Delete a document from the vector database.
 
-    Access Control:
-    - Administrators and managers are authorized to delete documents.
-    - Employees are not authorized to delete documents.
-
-    The document is deleted only when its `source` and `department`
-    match the authenticated user's department.
-
-    Args:
-        source: The source identifier or filename of the document
-                to delete.
-        runtime: Runtime context containing the authenticated user's
-                 role and department.
-
-    Returns:
-        A success response when the document is deleted.
-        A professional permission-denied error when the user does not
-        have sufficient privileges.
-        An error response if the deletion operation fails.
+    Administrators and managers are allowed to delete documents.
+    The document must belong to the authenticated user's department.
     """
+
+    print("\n🔥🔥 DELETE DOCUMENT TOOL CALLED 🔥🔥")
+    print("SOURCE:", source)
+    print("ROLE:", runtime.context.role)
+    print("DEPARTMENT:", runtime.context.department)
 
     # -----------------------------
     # ROLE CHECK
@@ -44,37 +39,37 @@ def delete_document(
             "status": "error",
             "message": (
                 "Access denied. You do not have sufficient privileges "
-                "to delete documents. Document deletion is restricted "
-                "to administrators and managers."
+                "to delete documents."
             ),
         }
 
     try:
+
         # -----------------------------
         # DELETE
         # -----------------------------
 
         qdrant_client.delete(
             collection_name=COLLECTION_NAME,
-            points_selector={
-                "filter": {
-                    "must": [
-                        {
-                            "key": "source",
-                            "match": {
-                                "value": source,
-                            },
-                        },
-                        {
-                            "key": "department",
-                            "match": {
-                                "value": runtime.context.department,
-                            },
-                        },
-                    ]
-                }
-            },
+            points_selector=Filter(
+                must=[
+                    FieldCondition(
+                        key="source",
+                        match=MatchValue(
+                            value=source
+                        ),
+                    ),
+                    FieldCondition(
+                        key="department",
+                        match=MatchValue(
+                            value=runtime.context.department
+                        ),
+                    ),
+                ]
+            ),
         )
+
+        print("✅ DOCUMENT DELETE REQUEST SUCCESSFUL")
 
         return {
             "status": "success",
@@ -84,6 +79,11 @@ def delete_document(
         }
 
     except Exception as e:
+
+        print("\n❌ DELETE DOCUMENT ERROR")
+        print("ERROR TYPE:", type(e).__name__)
+        print("ERROR:", repr(e))
+
         return {
             "status": "error",
             "message": (

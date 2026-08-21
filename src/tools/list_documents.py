@@ -12,6 +12,7 @@ def list_documents(
     query: str,
     runtime: ToolRuntime[UserContext],
 ):
+
     """
     List documents from the authenticated user's department
     knowledge base based on the user's query.
@@ -60,6 +61,10 @@ def list_documents(
         total document count, or a professional error response when
         the user is unauthorized or the operation fails.
     """
+    print("\n========== LIST DOCUMENTS TOOL CALLED ==========")
+    print("QUERY:", query)
+    print("ROLE:", runtime.context.role)
+    print("DEPARTMENT:", runtime.context.department)
 
     # -----------------------------
     # ROLE CHECK
@@ -108,6 +113,10 @@ def list_documents(
             with_payload=True,
             with_vectors=False,
         )
+        print("\n========== LIST DOCUMENTS ==========")
+        print("QUERY:", query)
+        print("ROLE:", runtime.context.role)
+        print("DEPARTMENT:", runtime.context.department)
 
         points = results[0]
 
@@ -142,15 +151,16 @@ def list_documents(
 
             documents[source]["chunks"] += 1
 
-        document_list = list(documents.values())
-
         return {
             "status": "success",
-            "documents": document_list,
-            "total_documents": len(document_list),
+            "documents": list(documents.keys()),
+            "total_documents": len(documents),
         }
 
     except Exception as e:
+        print("\n❌ LIST DOCUMENTS ERROR")
+        print("ERROR TYPE:", type(e).__name__)
+        print("ERROR:", repr(e))
         return {
             "status": "error",
             "message": (

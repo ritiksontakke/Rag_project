@@ -63,6 +63,13 @@ def create_qdrant_collection():
         field_schema=PayloadSchemaType.KEYWORD,
     )
 
+    # Source index
+    qdrant_client.create_payload_index(
+        collection_name=COLLECTION_NAME,
+        field_name="source",
+        field_schema=PayloadSchemaType.KEYWORD,
+    )
+
     print(
         "Qdrant payload index ready: department"
     )

@@ -22,9 +22,15 @@ def ingestion_pipeline(
         documents
     )
 
+     # 3. Extract text from Document objects
+    texts = [
+        chunk.page_content
+        for chunk in chunks
+    ]
+
     # 3. Create embeddings
     vectors = create_embeddings(
-        chunks
+        texts
     )
 
     # 4. Store in Qdrant

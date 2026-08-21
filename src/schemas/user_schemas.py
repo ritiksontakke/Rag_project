@@ -64,3 +64,5 @@ class UserContext(BaseModel):
     role: str
 
     department: str
+
+    file_path: str | None = None
