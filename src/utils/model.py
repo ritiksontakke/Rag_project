@@ -52,3 +52,60 @@ def getSystemPrompt(prompt_name: str = "multi_model_rag"):
         Route tasks to the correct sub-agent.
         Never hallucinate.
         """
+
+def getdocsubagent(prompt_name: str = "ducument_sub_agent"):
+    try:
+        prompt = langfuse.get_prompt(
+            prompt_name,
+            label="production"  # or "latest"
+        )
+
+        # Depending on Langfuse version
+        return prompt.prompt
+
+    except Exception as e:
+        print(f"Failed to load prompt: {e}")
+
+        return """
+        You are an document subAgent.
+        Route tasks to the correct sub-agent.
+        Never hallucinate.
+        """
+
+def getKnowledsubagent(prompt_name: str = "KnowledgeAgent"):
+    try:
+        prompt = langfuse.get_prompt(
+            prompt_name,
+            label="production"  # or "latest"
+        )
+
+        # Depending on Langfuse version
+        return prompt.prompt
+
+    except Exception as e:
+        print(f"Failed to load prompt: {e}")
+
+        return """
+        You are an  KnowledgeAgent.
+        Route tasks to the correct sub-agent.
+        Never hallucinate.
+        """
+
+def getuploadsubagent(prompt_name: str = "UploadDocumentAgent"):
+    try:
+        prompt = langfuse.get_prompt(
+            prompt_name,
+            label="production"  # or "latest"
+        )
+
+        # Depending on Langfuse version
+        return prompt.prompt
+
+    except Exception as e:
+        print(f"Failed to load prompt: {e}")
+
+        return """
+        You are an  KnowledgeAgent.
+        Route tasks to the correct sub-agent.
+        Never hallucinate.
+        """

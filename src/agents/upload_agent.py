@@ -5,7 +5,7 @@ from langchain.agents.middleware import (
 )
 
 from src.schemas.user_schemas import UserContext
-from src.utils.model import get_model
+from src.utils.model import get_model, getuploadsubagent
 from src.access_control.permission_manager import (
     get_allowed_tools,
 )
@@ -73,6 +73,7 @@ def uploadDocumentAgent(
     # Select ONLY upload_document tool
     # -----------------------------------------
 
+
     upload_tools = [
         current_tool
         for current_tool in tools
@@ -92,6 +93,9 @@ def uploadDocumentAgent(
     # -----------------------------------------
     # Create upload sub-agent
     # -----------------------------------------
+    upload_system_prompt = getuploadsubagent(
+        "UploadDocumentAgent"
+    )
 
     document_agent = create_agent(
         model=get_model(),
@@ -107,26 +111,7 @@ def uploadDocumentAgent(
 
         context_schema=UserContext,
 
-        system_prompt = """
-You are the Document Upload Agent.
-
-Your ONLY responsibility is uploading PDF documents.
-
-For every upload request:
-
-1. You MUST call upload_document.
-2. Do NOT answer before calling the tool.
-3. Do NOT use general knowledge.
-4. Do NOT call any other tool.
-5. After upload_document returns:
-   - If status is "success", return the tool result.
-   - If status is "error", return the exact error message from the tool.
-6. NEVER generate a generic fallback such as:
-   "I'm sorry, but I was unable to retrieve..."
-7. NEVER claim that upload failed if upload_document returned status="success".
-
-The upload_document tool is the source of truth.
-"""
+        system_prompt =upload_system_prompt
     )
 
     # -----------------------------------------
