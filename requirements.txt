@@ -25,3 +25,4 @@ sentence-transformers
 langchain-community
 
 python-multipart
+langfuse
