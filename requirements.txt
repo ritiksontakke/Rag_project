@@ -3,7 +3,6 @@ uvicorn
 pydantic
 langchain
 
-
 langchain-openai
 python-dotenv
 sqlalchemy
@@ -15,15 +14,13 @@ pwdlib
 pydantic[email]
 pwdlib[argon2]
 
-
 qdrant-client
 
-
 langchain-text-splitters
-langchain-huggingface
-sentence-transformers
 langchain-community
+huggingface_hub
 
 python-multipart
 langfuse
+
 pypdf
