@@ -57,10 +57,34 @@ function token() {
   return localStorage.getItem("rag_token");
 }
 
+function autoGrowQuery() {
+  const ta = $("query");
+  if (!ta) return;
+  ta.style.height = "auto";
+  const max = 200;
+  const next = Math.min(ta.scrollHeight, max);
+  ta.style.height = Math.max(next, 48) + "px";
+  ta.style.overflowY = ta.scrollHeight > max ? "auto" : "hidden";
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
+}
+
+/* ---------------- success popup ---------------- */
+
+function showSuccess(title, text) {
+  $("success-title").textContent = title;
+  $("success-text").innerHTML = text;
+  $("success-modal").classList.remove("hidden");
+}
+
+function closeSuccess() {
+  $("success-modal").classList.add("hidden");
+  const el = $("login-password");
+  if (el) el.focus();
 }
 
 /* ---------------- auth screen ---------------- */
@@ -107,9 +131,14 @@ async function doSignup(e) {
     if (!res.ok) return setMsg(msg, errText(data, "Signup failed."));
 
     const email = body.email;
+    $("signup-form").reset();
     showTab("login");
     $("login-email").value = email;
-    setMsg(msg, "Account created. Please log in.", true);
+    setMsg(msg, "");
+    showSuccess(
+      "Account created successfully",
+      `Welcome ${escapeHtml(body.full_name)}! Your account is ready. Please log in to continue.`
+    );
   } catch {
     setMsg(msg, "Cannot reach the API. Is the backend running?");
   }
@@ -325,7 +354,9 @@ function renderMessages(store) {
     })
     .join("");
 
-  box.scrollTop = box.scrollHeight;
+  requestAnimationFrame(() => {
+    box.scrollTo({ top: box.scrollHeight, behavior: "auto" });
+  });
 }
 
 async function doAsk(e) {
@@ -335,6 +366,7 @@ async function doAsk(e) {
   if (!query) return;
 
   input.value = "";
+  autoGrowQuery();
   pushMsg({ role: "user", content: query });
 
   const btn = $("send-btn");
@@ -445,6 +477,8 @@ document.addEventListener("DOMContentLoaded", () => {
   else if (t) logout();
 
   const ta = $("query");
+  ta.addEventListener("input", autoGrowQuery);
+  autoGrowQuery();
   ta.addEventListener("keydown", (ev) => {
     if (ev.key === "Enter" && !ev.shiftKey) {
       ev.preventDefault();
