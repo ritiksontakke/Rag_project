@@ -53,9 +53,22 @@ function errText(data, fallback) {
   return JSON.stringify(d);
 }
 
+/* Session token is kept in MEMORY ONLY.
+   A page refresh / new tab therefore always logs the user out. */
+let AUTH_TOKEN = null;
+let CURRENT_USER_KEY = null;
+let PENDING_LOGIN = null;
+
 function token() {
-  return localStorage.getItem("rag_token");
+  return AUTH_TOKEN;
 }
+
+/* Remove any token persisted by older versions of this app. */
+try {
+  localStorage.removeItem("rag_token");
+  sessionStorage.removeItem("rag_token");
+  localStorage.removeItem("rag_chats"); // legacy shared chat store (leaked between users)
+} catch {}
 
 function autoGrowQuery() {
   const ta = $("query");
@@ -83,6 +96,15 @@ function showSuccess(title, text) {
 
 function closeSuccess() {
   $("success-modal").classList.add("hidden");
+  // Continue straight into the app with the credentials just used to sign up,
+  // so a freshly created account can never report "invalid password".
+  if (PENDING_LOGIN) {
+    const creds = PENDING_LOGIN;
+    PENDING_LOGIN = null;
+    $("login-email").value = creds.email;
+    $("login-password").value = creds.password;
+    return signIn(creds.email, creds.password);
+  }
   const el = $("login-password");
   if (el) el.focus();
 }
@@ -108,7 +130,7 @@ async function doSignup(e) {
 
   const body = {
     full_name: $("su-name").value.trim(),
-    email: $("su-email").value.trim(),
+    email: $("su-email").value.trim().toLowerCase(),
     department: $("su-dept").value.trim(),
     password: $("su-password").value,
     confirm_password: $("su-confirm").value,
@@ -131,9 +153,12 @@ async function doSignup(e) {
     if (!res.ok) return setMsg(msg, errText(data, "Signup failed."));
 
     const email = body.email;
+    const password = body.password;
+    PENDING_LOGIN = { email, password };
     $("signup-form").reset();
     showTab("login");
     $("login-email").value = email;
+    $("login-password").value = "";
     setMsg(msg, "");
     showSuccess(
       "Account created successfully",
@@ -146,13 +171,19 @@ async function doSignup(e) {
 
 async function doLogin(e) {
   e.preventDefault();
+  PENDING_LOGIN = null;
+  return signIn($("login-email").value.trim().toLowerCase(), $("login-password").value);
+}
+
+async function signIn(email, password) {
   const msg = $("auth-msg");
   setMsg(msg, "Signing in...", true);
 
   // backend uses OAuth2PasswordRequestForm -> form encoded
+  // NOTE: password is sent exactly as typed (never trimmed/lowercased)
   const form = new URLSearchParams();
-  form.set("username", $("login-email").value.trim());
-  form.set("password", $("login-password").value);
+  form.set("username", email);
+  form.set("password", password);
 
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
@@ -164,7 +195,8 @@ async function doLogin(e) {
 
     if (!res.ok) return setMsg(msg, errText(data, "Login failed."));
 
-    localStorage.setItem("rag_token", data.access_token);
+    AUTH_TOKEN = data.access_token;
+    $("login-password").value = "";
     setMsg(msg, "");
     enterApp();
   } catch {
@@ -173,7 +205,12 @@ async function doLogin(e) {
 }
 
 function logout() {
-  localStorage.removeItem("rag_token");
+  AUTH_TOKEN = null;
+  CURRENT_USER_KEY = null;
+  PENDING_LOGIN = null;
+  $("chat-list").innerHTML = "";
+  $("messages").innerHTML = "";
+  $("login-password").value = "";
   $("app-screen").classList.add("hidden");
   $("auth-screen").classList.remove("hidden");
 }
@@ -183,6 +220,10 @@ function logout() {
 function enterApp() {
   const claims = decodeJwt(token());
   if (!claims) return logout();
+
+  // Chat history is scoped to this exact user, so one account can never see
+  // another account's chats.
+  CURRENT_USER_KEY = String(claims.id || claims.sub || claims.email || "anon");
 
   const name = claims.full_name || claims.email || "User";
   const role = (claims.role || "employee").toLowerCase();
@@ -220,7 +261,9 @@ function enterApp() {
 /* ---------------- chat sessions ---------------- */
 /* store: { chats: [{ id, title, messages: [] }], activeId } */
 
-const STORE_KEY = "rag_chats";
+function storeKey() {
+  return "rag_chats:" + (CURRENT_USER_KEY || "anon");
+}
 
 function newId() {
   return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -234,7 +277,7 @@ function blankStore() {
 function loadStore() {
   let store;
   try {
-    store = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    store = JSON.parse(localStorage.getItem(storeKey()) || "null");
   } catch {
     store = null;
   }
@@ -249,7 +292,7 @@ function loadStore() {
 }
 
 function saveStore(store) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  localStorage.setItem(storeKey(), JSON.stringify(store));
 }
 
 function activeChat(store) {
@@ -469,12 +512,8 @@ async function doUpload(e) {
 document.addEventListener("DOMContentLoaded", () => {
   $("api-url").textContent = API_BASE;
 
-  const t = token();
-  const claims = t ? decodeJwt(t) : null;
-  const expired = claims && claims.exp && claims.exp * 1000 < Date.now();
-
-  if (claims && !expired) enterApp();
-  else if (t) logout();
+  // No persisted session: every load starts on the auth screen.
+  logout();
 
   const ta = $("query");
   ta.addEventListener("input", autoGrowQuery);
