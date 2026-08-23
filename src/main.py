@@ -21,7 +21,6 @@ app.add_middleware(
         "http://localhost:5500",
         "https://multi-model-rag-frontend.netlify.app",
         "https://6a8956d3719b09000854b6e4--multi-model-rag-frontend.netlify.app",
-        "http://127.0.0.1:8000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
