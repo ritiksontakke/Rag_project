@@ -15,6 +15,7 @@ from src.utils.model import langfuse_handler
 from src.agents.Orchestrator_Agent import (
     orchestratorAgent,
 )
+from src.tools.external_search import external_search
 
 
 router = APIRouter(
@@ -22,6 +23,39 @@ router = APIRouter(
     tags=["Knowledge"],
 )
 
+
+# =========================================================
+# YES / NO
+# =========================================================
+
+YES_WORDS = {
+    "yes",
+    "y",
+    "haan",
+    "ha",
+    "yes please",
+    "sure",
+    "okay",
+    "ok",
+    "go ahead",
+    "search externally",
+    "search the web",
+}
+
+NO_WORDS = {
+    "no",
+    "n",
+    "nahi",
+    "nah",
+    "no thanks",
+    "not now",
+    "cancel",
+}
+
+
+# =========================================================
+# KNOWLEDGE ASK
+# =========================================================
 
 @router.post("/ask")
 async def ask_knowledge(
@@ -65,39 +99,75 @@ async def ask_knowledge(
         previous_messages = []
 
         if state:
-            previous_messages = state.values.get(
-                "messages",
-                [],
+
+            previous_messages = (
+                state.values.get(
+                    "messages",
+                    [],
+                )
+                or []
             )
 
         # -----------------------------------------
-        # Check YES permission
+        # Normalize query
         # -----------------------------------------
 
-        is_yes = query.lower() in {
-            "yes",
-            "y",
-            "haan",
-            "ha",
-            "yes please",
-            "sure",
-            "okay",
-            "ok",
-            "go ahead",
-            "search externally",
-            "search the web",
-        }
+        normalized_query = query.lower().strip()
 
-        external_search_allowed = False
+        is_yes = normalized_query in YES_WORDS
 
-        original_query = query
+        is_no = normalized_query in NO_WORDS
 
-        if is_yes and previous_messages:
+        # -----------------------------------------
+        # Find previous assistant message
+        # -----------------------------------------
 
-            # Check whether previous assistant
-            # asked for external search permission
+        previous_answer = ""
 
-            previous_answer = ""
+        for message in reversed(previous_messages):
+
+            message_type = getattr(
+                message,
+                "type",
+                None,
+            )
+
+            if message_type == "ai":
+
+                content = getattr(
+                    message,
+                    "content",
+                    "",
+                )
+
+                if isinstance(content, str):
+                    previous_answer = content
+
+                break
+
+        # -----------------------------------------
+        # Check whether external search
+        # confirmation is pending
+        # -----------------------------------------
+
+        waiting_for_external = (
+            isinstance(previous_answer, str)
+            and
+            "would you like me to search external sources"
+            in previous_answer.lower()
+        )
+
+        # =================================================
+        # YES
+        # =================================================
+
+        if is_yes and waiting_for_external:
+
+            # -----------------------------------------
+            # Find ORIGINAL USER QUESTION
+            # -----------------------------------------
+
+            original_query = None
 
             for message in reversed(previous_messages):
 
@@ -107,44 +177,150 @@ async def ask_knowledge(
                     None,
                 )
 
-                if message_type == "ai":
+                if message_type == "human":
 
-                    previous_answer = getattr(
+                    content = getattr(
                         message,
                         "content",
                         "",
                     )
 
-                    break
-
-            waiting_for_external = (
-                isinstance(previous_answer, str)
-                and
-                "would you like me to search external sources"
-                in previous_answer.lower()
-            )
-
-            if waiting_for_external:
-
-                external_search_allowed = True
-
-                # Find original unanswered question
-                for message in reversed(previous_messages):
-
-                    message_type = getattr(
-                        message,
-                        "type",
-                        None,
-                    )
-
-                    if message_type == "human":
-
-                        original_query = message.content
-
+                    if (
+                        isinstance(content, str)
+                        and content.strip().lower()
+                        not in YES_WORDS
+                        and content.strip().lower()
+                        not in NO_WORDS
+                    ):
+                        original_query = content.strip()
                         break
 
+            # -----------------------------------------
+            # Safety check
+            # -----------------------------------------
+
+            if not original_query:
+
+                return {
+                    "answer": (
+                        "I couldn't determine which question "
+                        "you want me to search externally. "
+                        "Please ask your question again."
+                    ),
+                    "department": current_user["department"],
+                }
+
+            # -----------------------------------------
+            # DIRECT EXTERNAL SEARCH
+            #
+            # IMPORTANT:
+            # DO NOT CALL ORCHESTRATOR HERE
+            # -----------------------------------------
+
+            print(
+                "\n========== EXTERNAL SEARCH CONFIRMED =========="
+            )
+
+            print(
+                "USER QUERY:",
+                query,
+            )
+
+            print(
+                "ORIGINAL QUERY:",
+                original_query,
+            )
+
+            try:
+
+                result = external_search.invoke(
+                    {
+                        "query": original_query
+                    }
+                )
+
+                print(
+                    "\n========== EXTERNAL SEARCH RESULT =========="
+                )
+
+                print(result)
+
+                return {
+                    "answer": str(result),
+                    "department": current_user["department"],
+                }
+
+            except Exception as e:
+
+                print(
+                    "\n========== EXTERNAL SEARCH ERROR =========="
+                )
+
+                print(
+                    repr(e)
+                )
+
+                return {
+                    "answer": (
+                        "I’m unable to search external sources "
+                        "right now. Please try again later."
+                    ),
+                    "department": current_user["department"],
+                }
+
+        # =================================================
+        # NO
+        # =================================================
+
+        if is_no and waiting_for_external:
+
+            print(
+                "\n========== EXTERNAL SEARCH DECLINED =========="
+            )
+
+            return {
+                "answer": (
+                    "Understood. I’ll continue using only the "
+                    "available company documents. "
+                    "Please feel free to ask another question."
+                ),
+                "department": current_user["department"],
+            }
+
+        # =================================================
+        # OTHER MESSAGE WHILE WAITING FOR YES / NO
+        # =================================================
+
+        if (
+            waiting_for_external
+            and not is_yes
+            and not is_no
+        ):
+
+            return {
+                "answer": (
+                    "I’m still waiting for your confirmation "
+                    "to search external sources. "
+                    "Please reply Yes or No."
+                ),
+                "department": current_user["department"],
+            }
+
+        # =================================================
+        # NORMAL KNOWLEDGE FLOW
+        # =================================================
+
+        print(
+            "\n========== NORMAL KNOWLEDGE FLOW =========="
+        )
+
+        print(
+            "USER QUERY:",
+            query,
+        )
+
         # -----------------------------------------
-        # Build user context
+        # Build context
         # -----------------------------------------
 
         context = UserContext(
@@ -153,35 +329,11 @@ async def ask_knowledge(
             email=current_user["email"],
             role=current_user["role"],
             department=current_user["department"],
-            external_search_allowed=(
-                external_search_allowed
-            ),
+            external_search_allowed=False,
         )
 
         # -----------------------------------------
-        # Debug
-        # -----------------------------------------
-
-        print(
-            "\n========== KNOWLEDGE REQUEST =========="
-        )
-
-        print("USER QUERY:", query)
-
-        print("THREAD ID:", thread_id)
-
-        print(
-            "EXTERNAL SEARCH ALLOWED:",
-            external_search_allowed,
-        )
-
-        print(
-            "ORIGINAL QUERY:",
-            original_query,
-        )
-
-        # -----------------------------------------
-        # Invoke orchestrator
+        # Invoke orchestrator ONLY for normal query
         # -----------------------------------------
 
         result = agent.invoke(
@@ -189,7 +341,7 @@ async def ask_knowledge(
                 "messages": [
                     {
                         "role": "user",
-                        "content": original_query,
+                        "content": query,
                     }
                 ]
             },
@@ -198,7 +350,7 @@ async def ask_knowledge(
         )
 
         # -----------------------------------------
-        # Debug messages
+        # Debug
         # -----------------------------------------
 
         print(
@@ -231,11 +383,13 @@ async def ask_knowledge(
             )
 
         # -----------------------------------------
-        # Final response
+        # Final answer
         # -----------------------------------------
 
+        answer = result["messages"][-1].content
+
         return {
-            "answer": result["messages"][-1].content,
+            "answer": answer,
             "department": context.department,
         }
 

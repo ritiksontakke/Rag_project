@@ -25,3 +25,5 @@ langfuse
 
 pypdf
 langchain-tavily
+
+langgraph-checkpoint-postgres
