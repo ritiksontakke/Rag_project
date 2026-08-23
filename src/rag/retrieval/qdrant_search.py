@@ -11,7 +11,7 @@ from src.rag.ingestion.embedder import (
 def search_documents(
     query: str,
     department: str,
-    limit: int = 5,
+    limit: int = 10,
 ):
 
     query_vector = create_embeddings(

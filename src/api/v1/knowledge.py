@@ -31,8 +31,120 @@ async def ask_knowledge(
 
     try:
 
+        query = request.query.strip()
+
         # -----------------------------------------
-        # Build typed user context
+        # Get thread ID
+        # -----------------------------------------
+
+        thread_id = current_user["thread_id"]
+
+        # -----------------------------------------
+        # Create orchestrator
+        # -----------------------------------------
+
+        agent = orchestratorAgent()
+
+        # -----------------------------------------
+        # Thread configuration
+        # -----------------------------------------
+
+        config = {
+            "configurable": {
+                "thread_id": thread_id,
+            },
+            "callbacks": [langfuse_handler],
+        }
+
+        # -----------------------------------------
+        # Check previous conversation
+        # -----------------------------------------
+
+        state = agent.get_state(config)
+
+        previous_messages = []
+
+        if state:
+            previous_messages = state.values.get(
+                "messages",
+                [],
+            )
+
+        # -----------------------------------------
+        # Check YES permission
+        # -----------------------------------------
+
+        is_yes = query.lower() in {
+            "yes",
+            "y",
+            "haan",
+            "ha",
+            "yes please",
+            "sure",
+            "okay",
+            "ok",
+            "go ahead",
+            "search externally",
+            "search the web",
+        }
+
+        external_search_allowed = False
+
+        original_query = query
+
+        if is_yes and previous_messages:
+
+            # Check whether previous assistant
+            # asked for external search permission
+
+            previous_answer = ""
+
+            for message in reversed(previous_messages):
+
+                message_type = getattr(
+                    message,
+                    "type",
+                    None,
+                )
+
+                if message_type == "ai":
+
+                    previous_answer = getattr(
+                        message,
+                        "content",
+                        "",
+                    )
+
+                    break
+
+            waiting_for_external = (
+                isinstance(previous_answer, str)
+                and
+                "would you like me to search external sources"
+                in previous_answer.lower()
+            )
+
+            if waiting_for_external:
+
+                external_search_allowed = True
+
+                # Find original unanswered question
+                for message in reversed(previous_messages):
+
+                    message_type = getattr(
+                        message,
+                        "type",
+                        None,
+                    )
+
+                    if message_type == "human":
+
+                        original_query = message.content
+
+                        break
+
+        # -----------------------------------------
+        # Build user context
         # -----------------------------------------
 
         context = UserContext(
@@ -41,13 +153,32 @@ async def ask_knowledge(
             email=current_user["email"],
             role=current_user["role"],
             department=current_user["department"],
+            external_search_allowed=(
+                external_search_allowed
+            ),
         )
 
         # -----------------------------------------
-        # Create orchestrator
+        # Debug
         # -----------------------------------------
 
-        agent = orchestratorAgent()
+        print(
+            "\n========== KNOWLEDGE REQUEST =========="
+        )
+
+        print("USER QUERY:", query)
+
+        print("THREAD ID:", thread_id)
+
+        print(
+            "EXTERNAL SEARCH ALLOWED:",
+            external_search_allowed,
+        )
+
+        print(
+            "ORIGINAL QUERY:",
+            original_query,
+        )
 
         # -----------------------------------------
         # Invoke orchestrator
@@ -58,17 +189,21 @@ async def ask_knowledge(
                 "messages": [
                     {
                         "role": "user",
-                        "content": request.query,
+                        "content": original_query,
                     }
                 ]
             },
             context=context,
-            config={
-                "callbacks": [langfuse_handler],
-            }
+            config=config,
         )
 
-        print("\n========== ORCHESTRATOR MESSAGES ==========")
+        # -----------------------------------------
+        # Debug messages
+        # -----------------------------------------
+
+        print(
+            "\n========== ORCHESTRATOR MESSAGES =========="
+        )
 
         for message in result["messages"]:
 

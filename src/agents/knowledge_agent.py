@@ -3,9 +3,8 @@ from langchain.tools import tool, ToolRuntime
 
 from src.schemas.user_schemas import UserContext
 from src.utils.model import get_model , getKnowledsubagent
-from src.tools.search_documents import search_documents
 from src.access_control.permission_manager import get_allowed_tools
-
+from src.tools.external_search import external_search
 
 @tool("knowledgeBaseAgent")
 def knowledgeAgent(
@@ -22,6 +21,30 @@ def knowledgeAgent(
     role = runtime.context.role
 
     tools = get_allowed_tools(role)
+    if runtime.context.external_search_allowed:
+        tools = tools + [external_search]
+
+    if runtime.context.external_search_allowed:
+
+        print("\n========== EXTERNAL SEARCH FLOW ==========")
+        print("EXTERNAL QUERY:", query)
+
+        try:
+            result = external_search.invoke({
+                "query": query
+            })
+
+            print("\nEXTERNAL SEARCH RESULT:")
+            print(result)
+
+            return str(result)
+
+        except Exception as e:
+
+            print("\nEXTERNAL SEARCH ERROR:")
+            print(repr(e))
+
+            return "Unable to search external sources."
 
     print(
         "\n========== KNOWLEDGE AGENT =========="

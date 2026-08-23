@@ -7,6 +7,9 @@ const API_BASE =
   localStorage.getItem("rag_api_base") ||
   "https://multi-model-rag-3rt6.onrender.com/api/v1";
 
+// const API_BASE =
+//   "http://127.0.0.1:8000/api/v1";
+
 const ROLE_TOOLS = {
   employee: ["search_documents", "get_document", "list_documents"],
   manager: [
@@ -287,18 +290,65 @@ async function signIn(email, password) {
    LOGOUT
    ========================================================= */
 
-function logout() {
-  AUTH_TOKEN = null;
+// function logout() {
+//   AUTH_TOKEN = null;
 
+//   CURRENT_USER_KEY = null;
+//   CURRENT_USER_SCOPE = null;
+
+//   PENDING_LOGIN = null;
+
+//   $("chat-list").innerHTML = "";
+//   $("messages").innerHTML = "";
+
+//   $("login-password").value = "";
+
+//   $("app-screen").classList.add("hidden");
+//   $("auth-screen").classList.remove("hidden");
+// }
+
+function logout() {
+
+  // -----------------------------
+  // Auth/session clear
+  // -----------------------------
+
+  AUTH_TOKEN = null;
   CURRENT_USER_KEY = null;
   CURRENT_USER_SCOPE = null;
-
   PENDING_LOGIN = null;
+
+  // -----------------------------
+  // Thread clear
+  // -----------------------------
+
+  THREAD_ID = null;
+
+  // -----------------------------
+  // Chat state clear
+  // -----------------------------
+
+  chatHistory = [];
+
+  // -----------------------------
+  // Clear browser storage
+  // -----------------------------
+
+  localStorage.clear();
+  sessionStorage.clear();
+
+  // -----------------------------
+  // Clear UI
+  // -----------------------------
 
   $("chat-list").innerHTML = "";
   $("messages").innerHTML = "";
 
   $("login-password").value = "";
+
+  // -----------------------------
+  // Return to login
+  // -----------------------------
 
   $("app-screen").classList.add("hidden");
   $("auth-screen").classList.remove("hidden");
@@ -961,7 +1011,7 @@ async function doAsk(e) {
         },
 
         body: JSON.stringify({
-          query,
+          query: query,
         }),
       }
     );

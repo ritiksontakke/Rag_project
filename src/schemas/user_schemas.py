@@ -66,3 +66,5 @@ class UserContext(BaseModel):
     department: str
 
     file_path: str | None = None
+
+    external_search_allowed:bool = False

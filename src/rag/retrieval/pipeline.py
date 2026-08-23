@@ -3,8 +3,7 @@ from src.rag.retrieval.qdrant_search import (
 )
 
 
-RELEVANCE_THRESHOLD = 0.65
-
+RELEVANCE_THRESHOLD = 0.40
 
 def retrieval_pipeline(
     query: str,

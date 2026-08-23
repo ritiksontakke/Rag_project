@@ -10,65 +10,73 @@ def search_documents(
     runtime: ToolRuntime[UserContext],
 ):
     """
-    Search the company knowledge base for information relevant to the
-    user's query and return the most relevant document content.
+    Search the authenticated user's department-specific company
+    knowledge base for information relevant to the user's query.
 
-    Access Control:
-    - This tool is available to all authenticated user roles, including
-      administrators, managers, and employees.
-    - There is no role-based restriction on searching documents.
-    - Search results must always be restricted to the authenticated
-      user's department.
+    The search must be meaning-based and tolerant of normal user input
+    errors.
 
-    Search Behavior:
-    - Use this tool when the user asks a question that may be answered
-      using information stored in the company knowledge base.
-    - Search the knowledge base using the user's query and retrieve the
-      most relevant document chunks.
-    - Do not invent, assume, or fabricate information that is not found
-      in the retrieved documents.
-    - The retrieved content should be used to provide an accurate,
-      concise answer to the user's question.
-    - Include relevant document metadata such as source, page, and
-      relevance score when available.
+    QUERY UNDERSTANDING:
+    - The user may make spelling mistakes, typing mistakes, incomplete
+      words, missing characters, grammatical mistakes, abbreviations,
+      singular/plural variations, or informal phrasing.
+    - Do not require an exact spelling match.
+    - Do not require an exact phrase match.
+    - Interpret the user's intended meaning from the complete query.
+    - Important words and concepts should be considered independently
+      as well as in combination.
+    - The retrieval system should find semantically similar and
+      contextually relevant document content even when the wording in
+      the document differs from the user's wording.
+    - Obvious spelling or typing errors should not prevent relevant
+      documents from being retrieved.
+    - Do not expose internal query correction or normalization details
+      to the user.
 
-    Department Isolation:
-    - Only search and return information belonging to the user's
-      authenticated department.
-    - Never retrieve or expose information from another department.
+    RETRIEVAL:
+    - Search the company knowledge base first.
+    - Retrieve multiple potentially relevant document chunks.
+    - Rank results by relevance.
+    - Do not discard a potentially relevant result only because the
+      wording or spelling differs from the query.
+    - Prefer content that matches the user's intended meaning.
+    - Search only within the authenticated user's department.
 
-    Query Requirement:
-    - The query should contain the user's actual question or information
-      they are looking for.
-    - Pass the user's question directly or convert it into a clear
-      search query when necessary.
+    COMPANY DATA:
+    - Company documents are the authoritative source for
+      company-specific policies, procedures, benefits, employment
+      information, compensation, leave, hiring, termination, and
+      other internal information.
+    - Never invent or assume company-specific information.
+    - Never use external knowledge inside this tool.
+    - If relevant company information cannot be found, return no
+      relevant results so the knowledge agent can handle the
+      missing-information case.
 
-    No Results:
-    - If no relevant information is found, clearly inform the user that
-      no relevant information was found in their department's knowledge
-      base.
-    - Do not fabricate an answer when the knowledge base does not contain
-      sufficient information.
+    ACCESS CONTROL:
+    - Results must always be restricted to the authenticated user's
+      department.
+    - Never return documents belonging to another department.
 
-    Error Handling:
-    - If the knowledge base search fails, return a clear and
-      professional error message without exposing unnecessary internal
-      implementation details.
+    ERROR HANDLING:
+    - If the search fails, return a clear error response without
+      exposing unnecessary internal implementation details.
 
     Args:
         query:
-            The user's question or search request. This is used to find
-            relevant information in the company knowledge base.
+            The user's original question or search request. The search
+            system should interpret the intended meaning of the query
+            and retrieve semantically or contextually relevant company
+            documents.
 
         runtime:
             Runtime context containing the authenticated user's
-            department. The department is used to ensure that search
-            results remain isolated to the user's department.
+            department.
 
     Returns:
-        A response containing the most relevant document chunks found
-        in the user's department, including their content and available
-        metadata such as source, page, and relevance score.
+        A response containing relevant company document chunks and
+        available metadata such as source, page, department, and
+        relevance score.
     """
 
     print("\n🔥 SEARCH_DOCUMENTS TOOL CALLED")

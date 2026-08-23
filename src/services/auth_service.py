@@ -4,6 +4,7 @@ from src.auth.auth_handler import create_access_token
 from src.repositories.user_repository import UserRepository
 from src.schemas.user_schemas import UserLogin
 from src.utils.password import verify_password
+import uuid
 
 
 class AuthService:
@@ -33,13 +34,19 @@ class AuthService:
                 "Invalid email or password"
             )
 
+        thread_id = str(uuid.uuid4())
+
         token_data = {
             "id": str(user.id),
             "full_name": user.full_name,
             "email": user.email,
             "role": user.role,
             "department": user.department,
+
+            # Conversation thread
+            "thread_id": thread_id,
         }
+
 
         access_token = create_access_token(
             token_data

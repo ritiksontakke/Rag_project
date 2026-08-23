@@ -3,7 +3,7 @@ from langchain_openai import ChatOpenAI
 import os
 from langfuse import Langfuse
 from langfuse.langchain import CallbackHandler
-
+from openai import OpenAI
 
 load_dotenv()
 langfuse = Langfuse()
@@ -19,7 +19,8 @@ def get_openai_model():
 def get_model():
     return get_openai_model()
 
-
+def get_tavily_api_key():
+    return os.getenv("TAVILY_API_KEY")
 # Get production prompt
 # prompt = langfuse.get_prompt("multi_model_rag")
 
