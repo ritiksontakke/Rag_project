@@ -14,14 +14,13 @@ pwdlib
 pydantic[email]
 pwdlib[argon2]
 
-qdrant-client
 psycopg2-binary
 
 
 langchain-text-splitters
 langchain-community
 huggingface_hub
-
+qdrant-client==1.14.2
 python-multipart
 langfuse
 
