@@ -51,22 +51,24 @@ def delete_document(
 
         qdrant_client.delete(
             collection_name=COLLECTION_NAME,
-            points_selector=Filter(
-                must=[
-                    FieldCondition(
-                        key="source",
-                        match=MatchValue(
-                            value=source
-                        ),
-                    ),
-                    FieldCondition(
-                        key="department",
-                        match=MatchValue(
-                            value=runtime.context.department
-                        ),
-                    ),
-                ]
-            ),
+            points_selector={
+                "filter": {
+                    "must": [
+                        {
+                            "key": "source",
+                            "match": {
+                                "value": source
+                            }
+                        },
+                        {
+                            "key": "department",
+                            "match": {
+                                "value": runtime.context.department
+                            }
+                        }
+                    ]
+                }
+            }
         )
 
         print("✅ DOCUMENT DELETE REQUEST SUCCESSFUL")
