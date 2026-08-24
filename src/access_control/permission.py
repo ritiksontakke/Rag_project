@@ -3,7 +3,6 @@ ROLE_TOOLS = {
         "search_documents",
         "get_document",
         "list_documents",
-        "external_search",
     ],
 
     "manager": [
@@ -13,7 +12,6 @@ ROLE_TOOLS = {
         "list_documents",
         "update_document",
         "delete_document",
-        "external_search",
     ],
 
     "admin": [
@@ -23,6 +21,5 @@ ROLE_TOOLS = {
         "list_documents",
         "update_document",
         "delete_document",
-        "external_search",
     ],
 }

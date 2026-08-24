@@ -3,12 +3,12 @@
    Talks to the FastAPI backend
    ========================================================= */
 
-const API_BASE =
-  localStorage.getItem("rag_api_base") ||
-  "https://multi-model-rag-3rt6.onrender.com/api/v1";
-
 // const API_BASE =
-//   "http://127.0.0.1:8000/api/v1";
+//   localStorage.getItem("rag_api_base") ||
+//   "https://multi-model-rag-3rt6.onrender.com/api/v1";
+
+const API_BASE =
+  "http://127.0.0.1:8000/api/v1"; 
 
 const ROLE_TOOLS = {
   employee: ["search_documents", "get_document", "list_documents"],

@@ -16,7 +16,8 @@ from src.agents.Orchestrator_Agent import (
     orchestratorAgent,
 )
 from src.tools.external_search import external_search
-
+from src.utils.model import get_openai_model
+from langchain_core.messages import HumanMessage, AIMessage
 
 router = APIRouter(
     prefix="/knowledge",
@@ -233,22 +234,88 @@ async def ask_knowledge(
 
             try:
 
+                # -------------------------------------------------
+                # Execute external search using the ORIGINAL question
+                # -------------------------------------------------
+
                 result = external_search.invoke(
                     {
                         "query": original_query
                     }
                 )
 
-                print(
-                    "\n========== EXTERNAL SEARCH RESULT =========="
-                )
+                print("External search completed successfully.")
 
-                print(result)
+                # -------------------------------------------------
+                # Convert raw external-search result into a clean
+                # user-facing answer using the OpenAI model.
+                # -------------------------------------------------
 
-                return {
-                    "answer": str(result),
-                    "department": current_user["department"],
-                }
+                try:
+                    model = get_openai_model()
+
+                    cleanup_prompt = f"""
+You are a helpful assistant responsible for converting
+external search results into a clean final answer.
+
+User's original question:
+{original_query}
+
+External search result:
+{result}
+
+Instructions:
+- Answer the user's original question directly.
+- Use only information supported by the external search result.
+- Do not mention Tavily, external search, tools, agents, retrieval,
+  prompts, logs, scores, request IDs, or internal processing.
+- Do not return JSON.
+- Do not list raw search results.
+- Do not display URLs unless they are essential to answer the question.
+- Do not expose search metadata.
+- Do not say that you are processing search results.
+- Keep the answer concise, clear, professional, and natural.
+- If the external result does not contain enough information,
+  say that the available information is insufficient rather than guessing.
+
+Return ONLY the final user-facing answer.
+"""
+
+                    cleaned_response = model.invoke(cleanup_prompt)
+                    answer = cleaned_response.content
+
+# -----------------------------------------
+# Update conversation state
+# -----------------------------------------
+
+                    agent.update_state(
+                        config,
+                        {
+                            "messages": [
+                                HumanMessage(content=query),
+                                AIMessage(content=answer),
+                            ]
+                        },
+                    )
+
+                    return {
+                        "answer": answer,
+                        "department": current_user["department"],
+                    }
+
+                except Exception as cleanup_error:
+                    print(
+                        "External search answer cleanup failed:",
+                        repr(cleanup_error),
+                    )
+
+                    return {
+                        "answer": (
+                            "I’m unable to generate a clean answer from "
+                            "the external sources right now. Please try again later."
+                        ),
+                        "department": current_user["department"],
+                    }
 
             except Exception as e:
 
@@ -274,16 +341,23 @@ async def ask_knowledge(
 
         if is_no and waiting_for_external:
 
-            print(
-                "\n========== EXTERNAL SEARCH DECLINED =========="
+            answer = (
+                "Understood. I’ll continue using the available "
+                "company documents. Please feel free to ask another question."
+            )
+
+            agent.update_state(
+                config,
+                {
+                    "messages": [
+                        HumanMessage(content=query),
+                        AIMessage(content=answer),
+                    ]
+                },
             )
 
             return {
-                "answer": (
-                    "Understood. I’ll continue using only the "
-                    "available company documents. "
-                    "Please feel free to ask another question."
-                ),
+                "answer": answer,
                 "department": current_user["department"],
             }
 

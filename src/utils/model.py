@@ -110,3 +110,23 @@ def getuploadsubagent(prompt_name: str = "UploadDocumentAgent"):
         Route tasks to the correct sub-agent.
         Never hallucinate.
         """
+
+
+def getexternalsubagent(prompt_name: str = "external_egent"):
+    try:
+        prompt = langfuse.get_prompt(
+            prompt_name,
+            label="production"  # or "latest"
+        )
+
+        # Depending on Langfuse version
+        return prompt.prompt
+
+    except Exception as e:
+        print(f"Failed to load prompt: {e}")
+
+        return """
+        You are an  external_sub_agent.
+        Route tasks to the correct sub-agent.
+        Never hallucinate.
+        """
