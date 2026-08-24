@@ -20,7 +20,7 @@ psycopg2-binary
 langchain-text-splitters
 langchain-community
 huggingface_hub
-qdrant-client==1.14.2
+qdrant-client
 python-multipart
 langfuse
 
