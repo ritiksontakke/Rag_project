@@ -101,14 +101,6 @@ def uploadDocumentAgent(
         model=get_model(),
 
         tools=upload_tools,
-
-        middleware=[
-            ModelCallLimitMiddleware(
-                thread_limit=10,
-                run_limit=5,
-            ),
-        ],
-
         context_schema=UserContext,
 
         system_prompt =upload_system_prompt
@@ -128,13 +120,18 @@ def uploadDocumentAgent(
             ]
         },
         context=runtime.context,
-    )
+        config={
+            "configurable": {
+                "thread_id": f"upload-subagent-{runtime.context.id}"
+            }
+        },
+    ),
 
-    print("\n========== UPLOAD AGENT MESSAGES ==========")
+    print("\n========== UPLOAD AGENT RESULT ==========")
 
-    for message in result["messages"]:
-        print("\nTYPE:", type(message).__name__)
-        print("CONTENT:", getattr(message, "content", None))
-        print("TOOL CALLS:", getattr(message, "tool_calls", None))
+    print("RESULT TYPE:", type(result))
+    print("RESULT:", repr(result))
 
-    return result["messages"][-1].content
+    messages = result[0]["messages"]
+
+    return messages[-1].content

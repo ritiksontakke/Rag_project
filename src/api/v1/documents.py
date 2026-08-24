@@ -15,7 +15,7 @@ from src.auth.oauth import get_current_user
 from src.agents.Orchestrator_Agent import orchestratorAgent
 from src.schemas.user_schemas import UserContext
 from src.utils.model import langfuse_handler
-
+import uuid
 
 router = APIRouter(
     prefix="/documents",
@@ -151,6 +151,9 @@ async def upload_document(
         # =====================================
         # SEND REQUEST TO MAIN AGENT
         # =====================================
+        thread_id = f"document-upload-{current_user['id']}-{uuid.uuid4()}"
+
+        print("🔥 UPLOAD THREAD:", thread_id)
 
         result = agent.invoke(
             {
@@ -168,6 +171,9 @@ async def upload_document(
             },
             context=context,
             config={
+                "configurable": {
+                    "thread_id": thread_id,
+                },
                 "callbacks": [langfuse_handler],
             }
         )
@@ -204,6 +210,13 @@ async def upload_document(
         ) from e
 
     except Exception as e:
+        import traceback
+
+        print("\n🔥🔥 DOCUMENT UPLOAD FAILED 🔥🔥")
+        print("ERROR TYPE:", type(e).__name__)
+        print("ERROR:", repr(e))
+        traceback.print_exc()
+        print("🔥🔥 END UPLOAD ERROR 🔥🔥\n")
 
         # Log e internally in production.
         raise HTTPException(
