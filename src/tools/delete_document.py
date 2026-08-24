@@ -1,11 +1,4 @@
 from langchain.tools import tool, ToolRuntime
-
-from qdrant_client.models import (
-    Filter,
-    FieldCondition,
-    MatchValue,
-)
-from qdrant_client import QdrantClient
 from src.schemas.user_schemas import UserContext
 from src.core.config import (
     qdrant_client,
