@@ -2,6 +2,10 @@
 
 A FastAPI-based company knowledge assistant that combines role-based access control, LangChain agents, PostgreSQL user management, Qdrant vector search, Hugging Face embeddings, OpenAI generation, and Langfuse prompt/trace management.
 
+Live Demo
+Multi-Model RAG Frontend
+
+
 ## Features
 
 - User signup and OAuth2-style login with JWT access tokens.
