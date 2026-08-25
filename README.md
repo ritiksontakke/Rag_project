@@ -2,8 +2,9 @@
 
 A FastAPI-based company knowledge assistant that combines role-based access control, LangChain agents, PostgreSQL user management, Qdrant vector search, Hugging Face embeddings, OpenAI generation, and Langfuse prompt/trace management.
 
-Live Demo
-Multi-Model RAG Frontend
+## Live Demo
+
+[🚀 Open Multi-Model RAG](https://multi-model-rag-frontend.netlify.app/)
 
 
 ## Features
