@@ -9,129 +9,24 @@ from src.utils.model import get_model, getuploadsubagent
 from src.access_control.permission_manager import (
     get_allowed_tools,
 )
+from src.tools.upload_document import upload_document
+from src.memory.checkpointer import checkpointer
 
+def uploadDocumentAgent(context: UserContext):
 
-@tool("uploadDocumentAgent")
-def uploadDocumentAgent(
-    query: str,
-    runtime: ToolRuntime[UserContext],
-):
-    """
-    Document Upload Agent.
+    # =====================================
+    # ROLE BASED ACCESS
+    # =====================================
 
-    Acts as the document-upload sub-agent of the
-    main orchestrator agent.
-
-    Responsibilities:
-    - Handle document upload requests.
-    - Verify that the authenticated user's role
-      permits document uploads.
-    - Select the upload_document tool allowed for
-      the user's role.
-    - Delegate PDF ingestion to the upload_document tool.
-    - Return the result of the document ingestion process.
-
-    Access Control:
-    - Only users with the manager or admin role can
-      upload documents.
-    - Role-based access control is checked before
-      the upload tool is exposed to the agent.
-    - A second permission check ensures that the
-      upload_document tool is actually available.
-
-    Args:
-        query:
-            Natural-language document upload request.
-
-        runtime:
-            LangChain runtime containing the authenticated
-            user's UserContext.
-
-    Returns:
-        str:
-            Result returned by the document upload agent,
-            or a permission-denied message.
-    """
-
-    context = runtime.context
-
-    role = context.role
-
-    # -----------------------------------------
-    # Get tools allowed for the user's role
-    # -----------------------------------------
-
-    tools = get_allowed_tools(role)
-
-    if not tools:
-        return (
-            f"Permission denied. "
-            f"No tools are available for role '{role}'."
+    if context.role not in {"admin", "manager"}:
+        raise PermissionError(
+            "Document upload is restricted to "
+            "administrators and managers."
         )
 
-    # -----------------------------------------
-    # Select ONLY upload_document tool
-    # -----------------------------------------
-
-
-    upload_tools = [
-        current_tool
-        for current_tool in tools
-        if current_tool.name == "upload_document"
-    ]
-
-    # -----------------------------------------
-    # Second-layer RBAC
-    # -----------------------------------------
-
-    if not upload_tools:
-        return (
-            "Permission denied. Document upload is "
-            "available only to managers and administrators."
-        )
-
-    # -----------------------------------------
-    # Create upload sub-agent
-    # -----------------------------------------
-    upload_system_prompt = getuploadsubagent(
-        "UploadDocumentAgent"
-    )
-
-    document_agent = create_agent(
+    return create_agent(
         model=get_model(),
-
-        tools=upload_tools,
-        context_schema=UserContext,
-
-        system_prompt =upload_system_prompt
+        tools=[upload_document],
+        system_prompt= getuploadsubagent("UploadDocumentAgent"),
+        checkpointer=checkpointer,
     )
-
-    # -----------------------------------------
-    # Execute sub-agent
-    # -----------------------------------------
-
-    result = document_agent.invoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": query,
-                }
-            ]
-        },
-        context=runtime.context,
-        config={
-            "configurable": {
-                "thread_id": f"upload-subagent-{runtime.context.id}"
-            }
-        },
-    ),
-
-    print("\n========== UPLOAD AGENT RESULT ==========")
-
-    print("RESULT TYPE:", type(result))
-    print("RESULT:", repr(result))
-
-    messages = result[0]["messages"]
-
-    return messages[-1].content

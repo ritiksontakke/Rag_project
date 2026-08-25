@@ -12,7 +12,7 @@ from fastapi import (
 )
 
 from src.auth.oauth import get_current_user
-from src.agents.Orchestrator_Agent import orchestratorAgent
+from src.agents.upload_agent import uploadDocumentAgent
 from src.schemas.user_schemas import UserContext
 from src.utils.model import langfuse_handler
 import uuid
@@ -146,7 +146,7 @@ async def upload_document(
         # MAIN ORCHESTRATOR
         # =====================================
 
-        agent = orchestratorAgent()
+        agent = uploadDocumentAgent(context)
 
         # =====================================
         # SEND REQUEST TO MAIN AGENT
@@ -182,21 +182,13 @@ async def upload_document(
         # FINAL AGENT RESPONSE
         # =====================================
 
-        answer = result[
-            "messages"
-        ][-1].content
+        # answer = result[
+        #     "messages"
+        # ][-1].content
 
         return {
-            "success": True,
-            "message": (
-                "Document uploaded and "
-                "ingestion completed successfully."
-            ),
-            "data": {
-                "file_name": file.filename,
-                "department": user_department,
-                "result": answer,
-            },
+            "status": "success",
+            "message": "Document uploaded successfully.",
         }
 
     except PermissionError as e:

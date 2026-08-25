@@ -5,6 +5,7 @@ from src.rag.retrieval.qdrant_search import (
 
 RELEVANCE_THRESHOLD = 0.40
 
+
 def retrieval_pipeline(
     query: str,
     department: str,
@@ -16,15 +17,29 @@ def retrieval_pipeline(
         limit=limit,
     )
 
+    print("\n========== RETRIEVAL PIPELINE ==========")
+    print("QUERY:", query)
+    print("DEPARTMENT:", repr(department))
+    print("QDRANT RESULTS:", len(results))
+
     documents = []
 
     for result in results:
         score = result.score
+        payload = result.payload or {}
+
+        print("\n--- RESULT ---")
+        print("SCORE:", score)
+        print("PAYLOAD DEPARTMENT:", repr(
+            payload.get("department")
+        ))
+        print("SOURCE:", payload.get("source"))
 
         if score is None or score < RELEVANCE_THRESHOLD:
+            print("❌ FILTERED OUT")
             continue
 
-        payload = result.payload or {}
+        print("✅ ACCEPTED")
 
         documents.append(
             {
@@ -35,5 +50,8 @@ def retrieval_pipeline(
                 "score": score,
             }
         )
+
+    print("\nFINAL DOCUMENTS:", len(documents))
+    print("========================================\n")
 
     return documents

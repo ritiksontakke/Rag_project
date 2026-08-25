@@ -516,7 +516,12 @@ function loadStore() {
   const key = storeKey();
 
   /*
-   * No authenticated user:
+   * No authenticated user:      content:
+        `Document "${file.name}" ingested for ${dept}.\n\n${
+          (data.data &&
+            data.data.result) ||
+          ""
+        }
    * do not access localStorage history.
    */
   if (!key) {
@@ -1160,14 +1165,7 @@ async function doUpload(e) {
 
     pushMsg({
       role: "assistant",
-
-      content:
-        `Document "${file.name}" ingested for ${dept}.\n\n${
-          (data.data &&
-            data.data.result) ||
-          ""
-        }`,
-
+      content: "Your document uploaded successfully.",
       department: dept,
     });
   } catch {

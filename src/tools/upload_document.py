@@ -19,7 +19,7 @@ def upload_document(
     # ROLE CHECK
     # -----------------------------
 
-    if runtime.context.role not in {
+    if runtime.context.role.lower() not in {
         "admin",
         "manager",
     }:
@@ -32,13 +32,22 @@ def upload_document(
         }
 
     # -----------------------------
+    # DEPARTMENT NORMALIZATION
+    # -----------------------------
+
+    user_department = (
+        runtime.context.department.strip().lower()
+    )
+
+    upload_department = (
+        department.strip().lower()
+    )
+
+    # -----------------------------
     # DEPARTMENT CHECK
     # -----------------------------
 
-    if (
-        runtime.context.department.lower()
-        != department.lower()
-    ):
+    if user_department != upload_department:
         return {
             "status": "error",
             "message": (
@@ -55,10 +64,8 @@ def upload_document(
 
         result = ingestion_pipeline(
             file_path=file_path,
-            department=department,
-            uploaded_by=str(
-                runtime.context.id
-            ),
+            department=upload_department,
+            uploaded_by=str(runtime.context.id),
         )
 
         return {
@@ -71,6 +78,10 @@ def upload_document(
         }
 
     except Exception as e:
+
+        print("\n❌ DOCUMENT INGESTION ERROR")
+        print("ERROR TYPE:", type(e).__name__)
+        print("ERROR:", repr(e))
 
         return {
             "status": "error",

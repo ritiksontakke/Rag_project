@@ -11,7 +11,7 @@ from src.memory.checkpointer import checkpointer
 def orchestratorAgent():
     return create_agent(
         model=get_model(),
-        tools=[documentmanagmentAgent, knowledgeAgent, uploadDocumentAgent],
+        tools=[documentmanagmentAgent, knowledgeAgent],
         system_prompt=getSystemPrompt("multi_model_rag"),
         store=store,
         checkpointer=checkpointer,

@@ -17,6 +17,8 @@ def search_documents(
     query_vector = create_embeddings(
         [query]
     )[0]
+    department = department.strip().lower()
+    
 
     results = qdrant_client.query_points(
         collection_name=COLLECTION_NAME,
