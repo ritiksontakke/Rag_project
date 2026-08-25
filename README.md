@@ -4,8 +4,9 @@ A FastAPI-based company knowledge assistant that combines role-based access cont
 
 ## Live Demo
 
-[🚀 Open Multi-Model RAG](https://multi-model-rag-frontend.netlify.app/)
-
+<a href="https://multi-model-rag-frontend.netlify.app/" target="_blank">
+  🚀 Open Multi-Model RAG
+</a>
 
 ## Features
 
