@@ -4,7 +4,6 @@ from src.utils.model import get_model
 from src.utils.model import getSystemPrompt
 from src.agents.document_management_agent import documentmanagmentAgent
 from src.agents.knowledge_agent import knowledgeAgent
-from src.agents.upload_agent import uploadDocumentAgent
 from src.memory.storememory import store
 from src.memory.checkpointer import checkpointer
 

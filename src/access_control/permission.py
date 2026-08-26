@@ -10,7 +10,6 @@ ROLE_TOOLS = {
         "search_documents",
         "get_document",
         "list_documents",
-        "update_document",
         "delete_document",
     ],
 
@@ -19,7 +18,6 @@ ROLE_TOOLS = {
         "search_documents",
         "get_document",
         "list_documents",
-        "update_document",
         "delete_document",
     ],
 }
