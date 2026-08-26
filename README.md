@@ -85,7 +85,6 @@ FastAPI
                   +--> get_document
                   +--> list_documents
                   +--> search_documents
-                  +--> update_document
                   +--> delete_document
 ```
 
@@ -138,7 +137,6 @@ ritiksontakke-multi-model-rag/
     │   ├── get_document.py
     │   ├── list_documents.py
     │   ├── search_documents.py
-    │   ├── update_document.py
     │   └── upload_document.py
     └── utils/
         ├── model.py
