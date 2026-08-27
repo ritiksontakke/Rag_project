@@ -46,9 +46,6 @@ FastAPI
   +--> /api/v1/documents/upload
   |       |
   |       v
-  |   Orchestrator Agent
-  |       |
-  |       v
   |   Upload Agent
   |       |
   |       v
