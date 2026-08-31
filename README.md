@@ -1,37 +1,57 @@
-# Multi-Model RAG API
+RAG Knowledge API API
 
-A FastAPI-based company knowledge assistant that combines role-based access control, LangChain agents, PostgreSQL user management, Qdrant vector search, Hugging Face embeddings, OpenAI generation, and Langfuse prompt/trace management.
+A FastAPI-based company knowledge assistant with role-based access control, LangChain agents, PostgreSQL user management, Qdrant vector search, Hugging Face embeddings, OpenAI generation, and Langfuse prompt/trace management. The current implementation uses one OpenAI generation model (gpt-5.4-nano) plus a separate embedding model; it is therefore better described as a single-generation-model RAG system rather than a multi-model generation architecture.
 
-## Live Demo
+Live Demo
 
-<a href="https://multi-model-rag-frontend.netlify.app/" target="_blank">
-  🚀 Open Multi-Model RAG
+<a href="https://rag-knowledge-api-frontend.netlify.app/" target="_blank">
+  🚀 Open RAG Knowledge API
 </a>
 
-## Features
+Architecture Note
 
-- User signup and OAuth2-style login with JWT access tokens.
-- Role-based document permissions for `employee`, `manager`, and `admin`.
-- Department-level isolation for document access.
-- PDF document upload and ingestion.
-- Document search, retrieval, listing, viewing, updating, and deletion.
-- Agent-based orchestration with:
-  - Orchestrator Agent
-  - Knowledge Base Agent
-  - Document Management Agent
-  - Upload Agent
-- RAG pipeline using:
-  - PyPDFLoader for PDF loading
-  - Custom document chunking
-  - `BAAI/bge-small-en-v1.5` embeddings
-  - Qdrant for vector storage and similarity search
-  - OpenAI chat model for answer generation
-- Relevance filtering with a configured retrieval threshold.
-- Langfuse callback tracing for API agent calls.
+The project name has been changed from Multi-Model RAG to RAG Knowledge API because the supplied implementation does not currently demonstrate multiple generation models. The code routes agent calls through get_model(), which returns a single ChatOpenAI instance configured with gpt-5.4-nano. The embedding stage uses BAAI/bge-small-en-v1.5, but embeddings and the generation LLM are different model roles, not evidence of a multi-LLM generation setup.
 
-## Architecture
+Features
 
-```text
+User signup and OAuth2-style login with JWT access tokens.
+
+Role-based document permissions for employee, manager, and admin.
+
+Department-level isolation for document access.
+
+PDF document upload and ingestion.
+
+Document search, retrieval, listing, viewing, updating, and deletion.
+
+Agent-based orchestration with:
+
+Orchestrator Agent
+
+Knowledge Base Agent
+
+Document Management Agent
+
+Upload Agent
+
+RAG pipeline using:
+
+PyPDFLoader for PDF loading
+
+Custom document chunking
+
+BAAI/bge-small-en-v1.5 embeddings
+
+Qdrant for vector storage and similarity search
+
+OpenAI chat model for answer generation
+
+Relevance filtering with a configured retrieval threshold.
+
+Langfuse callback tracing for API agent calls.
+
+Architecture
+
 Client
   |
   v
@@ -83,12 +103,10 @@ FastAPI
                   +--> list_documents
                   +--> search_documents
                   +--> delete_document
-```
 
-## Project Structure
+Project Structure
 
-```text
-ritiksontakke-multi-model-rag/
+ritiksontakke-rag-knowledge-api/
 ├── requirements.txt
 ├── test.py
 └── src/
@@ -138,79 +156,125 @@ ritiksontakke-multi-model-rag/
     └── utils/
         ├── model.py
         └── password.py
-```
 
-## Technology Stack
+Model Configuration
 
-| Component | Technology |
-|---|---|
-| API | FastAPI |
-| ASGI server | Uvicorn |
-| Validation | Pydantic |
-| Agent framework | LangChain |
-| LLM | OpenAI via `langchain-openai` |
-| Embeddings | Hugging Face `BAAI/bge-small-en-v1.5` |
-| Vector database | Qdrant |
-| Relational database | PostgreSQL |
-| ORM | SQLAlchemy |
-| Authentication | JWT / OAuth2 password flow |
-| Password hashing | pwdlib |
-| PDF loading | LangChain PyPDFLoader |
-| Observability | Langfuse |
+Role
 
-## Quick Start
+Current model
 
-### 1. Install dependencies
+Purpose
 
-```bash
+Generation LLM
+
+gpt-5.4-nano
+
+Agent reasoning and answer generation
+
+Embedding model
+
+BAAI/bge-small-en-v1.5
+
+Document/query vector embeddings
+
+Technology Stack
+
+Component
+
+Technology
+
+API
+
+FastAPI
+
+ASGI server
+
+Uvicorn
+
+Validation
+
+Pydantic
+
+Agent framework
+
+LangChain
+
+LLM
+
+OpenAI via langchain-openai
+
+Embeddings
+
+Hugging Face BAAI/bge-small-en-v1.5
+
+Vector database
+
+Qdrant
+
+Relational database
+
+PostgreSQL
+
+ORM
+
+SQLAlchemy
+
+Authentication
+
+JWT / OAuth2 password flow
+
+Password hashing
+
+pwdlib
+
+PDF loading
+
+LangChain PyPDFLoader
+
+Observability
+
+Langfuse
+
+Quick Start
+
+1. Install dependencies
+
 pip install -r requirements.txt
-```
 
-### 2. Configure environment
+2. Configure environment
 
-Create a `.env` file with your PostgreSQL, Qdrant, OpenAI, JWT, and Langfuse credentials.
+Create a .env file with your PostgreSQL, Qdrant, OpenAI, JWT, and Langfuse credentials.
 
-### 3. Start the project
+3. Start the project
 
-```bash
 uvicorn src.main:app --reload
-```
 
 API:
 
-```text
 http://127.0.0.1:8000
-```
 
 Swagger docs:
 
-```text
 http://127.0.0.1:8000/docs
-```
 
-### Useful Commands
+Useful Commands
 
-```bash
 # Start API
 uvicorn src.main:app --reload
 
 # Run password test
 python test.py
-```
 
-## API Endpoints
+API Endpoints
 
-### Authentication
+Authentication
 
-#### Signup
+Signup
 
-```http
 POST /api/v1/auth/signup
-```
 
 Request body:
 
-```json
 {
   "full_name": "John Doe",
   "email": "john@example.com",
@@ -218,313 +282,364 @@ Request body:
   "confirm_password": "password123",
   "department": "engineering"
 }
-```
 
-New users are registered with the `employee` role by the current implementation.
+New users are registered with the employee role by the current implementation.
 
-#### Login
+Login
 
-```http
 POST /api/v1/auth/login
-```
 
-The endpoint uses `OAuth2PasswordRequestForm`, so send:
+The endpoint uses OAuth2PasswordRequestForm, so send:
 
-```text
 username=<email>
 password=<password>
-```
 
 The response contains a bearer access token.
 
-### Document Upload
+Document Upload
 
-```http
 POST /api/v1/documents/upload
-```
 
 Form fields:
 
-- `department`
-- `file`
+department
+
+file
 
 The uploaded file must be a PDF.
 
-Only `admin` and `manager` users can upload documents, and the department must match the authenticated user's department.
+Only admin and manager users can upload documents, and the department must match the authenticated user's department.
 
-### Knowledge Query
+Knowledge Query
 
-```http
 POST /api/v1/knowledge/ask
-```
 
 Request body:
 
-```json
 {
   "query": "What is the company's leave policy?"
 }
-```
 
 The authenticated user's department is passed into the agent context and used to isolate knowledge-base retrieval.
 
-## Roles and Permissions
+Roles and Permissions
 
-| Operation | Employee | Manager | Admin |
-|---|:---:|:---:|:---:|
-| Search documents | Yes | Yes | Yes |
-| Get document | Yes | Yes | Yes |
-| List documents | No | Yes | Yes |
-| Upload document | No | Yes | Yes |
-| Update document | No | Yes | Yes |
-| Delete document | No | Yes | Yes |
+Operation
+
+Employee
+
+Manager
+
+Admin
+
+Search documents
+
+Yes
+
+Yes
+
+Yes
+
+Get document
+
+Yes
+
+Yes
+
+Yes
+
+List documents
+
+No
+
+Yes
+
+Yes
+
+Upload document
+
+No
+
+Yes
+
+Yes
+
+Update document
+
+No
+
+Yes
+
+Yes
+
+Delete document
+
+No
+
+Yes
+
+Yes
 
 The implementation performs permission checks both when selecting tools for agents and inside sensitive document tools.
 
-## RAG Pipeline
+RAG Pipeline
 
-### Ingestion
+Ingestion
 
 The document ingestion flow is:
 
-```text
 PDF
   -> PyPDFLoader
   -> Document chunks
   -> BAAI/bge-small-en-v1.5 embeddings
   -> Qdrant
-```
 
 Each stored Qdrant point includes metadata such as:
 
-- department
-- uploaded_by
-- content
-- page
-- chunk_index
-- source
+department
+
+uploaded_by
+
+content
+
+page
+
+chunk_index
+
+source
 
 The Qdrant collection is named:
 
-```text
 company_documents
-```
 
 The configured vector size is:
 
-```text
 384
-```
 
 and cosine distance is used.
 
-### Retrieval
+Retrieval
 
 The retrieval flow is:
 
-```text
 User Query
   -> Embedding
   -> Qdrant similarity search
   -> Department filter
   -> Relevance threshold
   -> Relevant document chunks
-```
 
 The retrieval threshold is currently:
 
-```text
 0.65
-```
 
-### Generation
+Generation
 
 The generator builds a context from retrieved document content and instructs the model to answer using only that context.
 
 If the answer is not present in the supplied context, the generation prompt instructs the model to state that the information is not available in company documents.
 
-## Agent Architecture
+Agent Architecture
 
-### Orchestrator Agent
+Orchestrator Agent
 
 The orchestrator is created with the following tools:
 
-- `documentManagmentAgent`
-- `knowledgeBaseAgent`
-- `uploadDocumentAgent`
+documentManagmentAgent
+
+knowledgeBaseAgent
+
+The upload flow creates uploadDocumentAgent separately for authorized document uploads.
 
 Its system prompt is loaded through Langfuse when available.
 
-### Knowledge Base Agent
+Knowledge Base Agent
 
 The Knowledge Base Agent is designed to:
 
-1. Call `search_documents` for every knowledge question.
-2. Use only retrieved content.
-3. Avoid hallucinating or adding outside knowledge.
-4. Preserve the language of the retrieved content.
-5. Return a fallback when relevant information cannot be found.
+Call search_documents for every knowledge question.
 
-### Document Management Agent
+Use only retrieved content.
+
+Avoid hallucinating or adding outside knowledge.
+
+Preserve the language of the retrieved content.
+
+Return a fallback when relevant information cannot be found.
+
+Document Management Agent
 
 This agent routes document-management requests to the appropriate authorized tool.
 
 Supported operations include:
 
-- Get
-- List
-- Search
-- Upload
-- Update
-- Delete
+Get
 
-### Upload Agent
+List
 
-The Upload Agent is restricted to PDF upload operations and uses the `upload_document` tool after role validation.
+Search
 
-## Security Model
+Upload
+
+Update
+
+Delete
+
+Upload Agent
+
+The Upload Agent is restricted to PDF upload operations and uses the upload_document tool after role validation.
+
+Security Model
 
 The application uses several layers of access control.
 
-### Authentication
+Authentication
 
 JWT access tokens are created after successful login and expire after 12 hours.
 
-### Role Authorization
+Role Authorization
 
 Sensitive operations require:
 
-```text
 admin
 manager
-```
 
 Employees are restricted from document listing, upload, update, and deletion.
 
-### Department Isolation
+Department Isolation
 
 Document retrieval is filtered by the authenticated user's department. Upload, update, and delete operations also verify department ownership.
 
-### File Validation
+File Validation
 
 The document upload API currently accepts only files whose content type is:
 
-```text
 application/pdf
-```
 
-## Database
+Database
 
 PostgreSQL stores application users.
 
-The `users` table contains:
+The users table contains:
 
-- `id`
-- `full_name`
-- `email`
-- `password_hash`
-- `role`
-- `department`
+id
+
+full_name
+
+email
+
+password_hash
+
+role
+
+department
 
 SQLAlchemy is used as the ORM.
 
-## Qdrant
+Qdrant
 
-The application creates the `company_documents` collection during startup if it does not already exist.
+The application creates the company_documents collection during startup if it does not already exist.
 
 Payload indexes are created for:
 
-- `department`
-- `source`
+department
+
+source
 
 These fields support department isolation and source-based document operations.
 
-## Testing
+Testing
 
-The repository currently contains a small `test.py` script for checking password hashing:
+The repository currently contains a small test.py script for checking password hashing:
 
-```bash
 python test.py
-```
 
 The supplied project does not currently include a comprehensive automated API/integration test suite.
 
-## Example Workflow
+Example Workflow
 
-### 1. Register
+1. Register
 
 Create an account through:
 
-```text
 POST /api/v1/auth/signup
-```
 
-### 2. Login
+2. Login
 
 Authenticate through:
 
-```text
 POST /api/v1/auth/login
-```
 
 Save the returned bearer token.
 
-### 3. Upload a PDF
+3. Upload a PDF
 
 Using a manager/admin account:
 
-```text
 POST /api/v1/documents/upload
-```
 
 Provide the user's department and PDF file.
 
-### 4. Ask a Knowledge Question
+4. Ask a Knowledge Question
 
 Send:
 
-```text
 POST /api/v1/knowledge/ask
-```
 
 with a query such as:
 
-```json
 {
   "query": "What information is available in the uploaded document?"
 }
-```
 
 The system retrieves relevant chunks only from the authenticated user's department and generates an answer from the retrieved context.
 
-## Important Implementation Notes
+Important Implementation Notes
 
-- The application expects external PostgreSQL and Qdrant services.
-- Environment variables are loaded with `python-dotenv`.
-- The OpenAI model configured in the supplied code is `gpt-5.4-nano`.
-- The embedding model is `BAAI/bge-small-en-v1.5`.
-- Langfuse is used for prompt retrieval and tracing.
-- Temporary PDF files created by the upload endpoint are cleaned up after processing.
-- The supplied source contains some debug `print()` statements that may be better replaced with structured logging for production.
-- The current `UserContext` schema appears twice in `src/schemas/user_schemas.py`; the later definition adds `file_path`.
+The application expects external PostgreSQL and Qdrant services.
 
-## Production Recommendations
+Environment variables are loaded with python-dotenv.
+
+The OpenAI model configured in the supplied code is gpt-5.4-nano.
+
+The embedding model is BAAI/bge-small-en-v1.5.
+
+Langfuse is used for prompt retrieval and tracing.
+
+Temporary PDF files created by the upload endpoint are cleaned up after processing.
+
+The supplied source contains some debug print() statements that may be better replaced with structured logging for production.
+
+The current UserContext schema appears twice in src/schemas/user_schemas.py; the later definition adds file_path.
+
+Production Recommendations
 
 Before deploying to production, consider:
 
-- Add a proper automated test suite for authentication, RBAC, department isolation, ingestion, retrieval, and document CRUD.
-- Add database migrations, such as Alembic, instead of relying only on `create_all()`.
-- Move secrets entirely to a secure secret manager.
-- Replace debug prints with structured application logging.
-- Add request size limits and stronger upload validation.
-- Add rate limiting for authentication and knowledge endpoints.
-- Validate and sanitize document/source identifiers consistently.
-- Add pagination for large document listings and document retrieval.
-- Add monitoring and error tracking around Qdrant, PostgreSQL, OpenAI, and Langfuse.
-- Review Qdrant index creation so startup is idempotent with the deployed Qdrant version.
-- Add explicit CORS configuration if the API will be called from a browser frontend.
-- Pin dependency versions in `requirements.txt` for reproducible deployments.
+Add a proper automated test suite for authentication, RBAC, department isolation, ingestion, retrieval, and document CRUD.
 
-## License
+Add database migrations, such as Alembic, instead of relying only on create_all().
 
-No license is specified in the supplied project. Add an appropriate license before distributing the repository.
+Move secrets entirely to a secure secret manager.
+
+Replace debug prints with structured application logging.
+
+Add request size limits and stronger upload validation.
+
+Add rate limiting for authentication and knowledge endpoints.
+
+Validate and sanitize document/source identifiers consistently.
+
+Add pagination for large document listings and document retrieval.
+
+Add monitoring and error tracking around Qdrant, PostgreSQL, OpenAI, and Langfuse.
+
+Review Qdrant index creation so startup is idempotent with the deployed Qdrant version.
+
+Add explicit CORS configuration if the API will be called from a browser frontend.
+
+Pin dependency versions in requirements.txt for reproducible deployments.
+
+License
+
+No 
