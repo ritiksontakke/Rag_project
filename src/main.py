@@ -19,7 +19,7 @@ app.add_middleware(
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-        "https://multi-model-rag-frontend.netlify.app",
+        "https://ragknowledgeapi.netlify.app",
         "https://6a8956d3719b09000854b6e4--multi-model-rag-frontend.netlify.app",
     ],
     allow_credentials=True,
