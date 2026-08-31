@@ -4,7 +4,7 @@ A FastAPI-based company knowledge assistant with role-based access control, Lang
 
 ## Live Demo
 
-<a href="https://rag-knowledge-api-frontend.netlify.app/" target="_blank">
+<a href="https://ragknowledgeapi.netlify.app/" target="_blank">
   🚀 Open RAG Knowledge API
 </a>
 
